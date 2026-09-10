@@ -1,9 +1,10 @@
-# [Project name]
+# Landry Net — Portfolio IT
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+Portfolio personnel de Landry Kayoyo, dédié à l'administration systèmes et réseaux, à l'infrastructure haute disponibilité, au monitoring et au développement.
 
 ## Run & Operate
 
+- `pnpm --filter @workspace/landry-net-portfolio run dev` — run the portfolio web app
 - `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
@@ -22,23 +23,33 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/landry-net-portfolio/src/App.tsx` — page portfolio, navigation, sections et formulaire de contact
+- `artifacts/landry-net-portfolio/src/index.css` — direction visuelle, responsive et animations
+- `attached_assets/` — logo Landry Net et photos utilisées par le portfolio
+- `lib/db/src/schema/` — schéma source de la base PostgreSQL
+- `lib/api-spec/` — contrat OpenAPI source
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Le portfolio est une single-page indépendante de l'API afin de rester rapide à consulter et facile à partager.
+- La page utilise une palette sombre éditoriale avec des accents bleu électrique et vert citron dérivés du logo.
+- Les interactions de la page restent côté client ; le formulaire conserve actuellement un brouillon local pour fournir un retour immédiat sans inventer de service d'envoi.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- Présentation de Landry Net et de son approche de l'infrastructure IT
+- Expertise interactive sur les systèmes, réseaux, monitoring, infrastructure et développement
+- Cas d'étude visuel sur la haute disponibilité Windows Server
+- Parcours, stack technique et formulaire de prise de contact
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- L'interface doit rester premium, professionnelle et inspirée de la référence Figma fournie par l'utilisateur.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Les commandes Vite de ce monorepo attendent `PORT` et `BASE_PATH` lorsqu'elles sont lancées directement hors workflow.
+- `DATABASE_URL` est requis uniquement par le serveur API et n'est pas nécessaire pour afficher le portfolio.
 
 ## Pointers
 

@@ -4,16 +4,26 @@ import { ErrorBoundary } from '@/components/error-boundary';
 import NotFound from '@/pages/not-found';
 import { motion, useReducedMotion } from 'framer-motion';
 import {
+  Activity,
   ArrowDownRight,
   ArrowUpRight,
+  Check,
   CheckCircle2,
   ChevronDown,
+  ChevronRight,
+  Cpu,
   Menu,
+  Network,
   Send,
+  Server,
+  ShieldCheck,
+  Terminal,
   X,
 } from 'lucide-react';
-import profileImage from '@assets/landry-kayoyo-profile.jpeg';
-import { Route, Switch, useLocation, Router as WouterRouter } from 'wouter';
+import { Route, Switch, Router as WouterRouter } from 'wouter';
+import brandLogo from '@assets/web-app-manifest-512x512_1789029553744.png';
+import presentationImage from '@assets/IMG_7917.JPG_1789029578939.jpeg';
+import diplomaImage from '@assets/WhatsApp_Image_2026-08-08_at_15.31.48_(1)_1789029615897.jpeg';
 
 const queryClient = new QueryClient();
 
@@ -26,59 +36,66 @@ const navItems = [
   { label: 'Expertise', href: '#expertise' },
   { label: 'Projet', href: '#project' },
   { label: 'Parcours', href: '#parcours' },
-  { label: 'Contact', href: '#contact' },
 ];
 
 const expertise = [
   {
     number: '01',
     title: 'Systèmes',
-    description: 'Administration et structuration d’environnements Windows Server et Linux.',
-    tools: 'Active Directory · services réseau · haute disponibilité',
+    short: 'Administrer les fondations.',
+    description: 'Windows Server et Linux pensés comme des fondations documentées : annuaire, services réseau, durcissement et politiques qui restent compréhensibles.',
+    tools: 'Active Directory · GPO · PowerShell · Ubuntu Server',
+    icon: Server,
   },
   {
     number: '02',
     title: 'Réseaux',
-    description: 'Conception et administration de réseaux lisibles, stables et sécurisés.',
-    tools: 'TCP/IP · DHCP · DNS · VLAN · VPN · FortiGate · GNS3',
+    short: 'Rendre chaque flux lisible.',
+    description: 'Des architectures réseau claires, segmentées et testables, de la topologie TCP/IP au firewall en passant par les VLAN et les accès distants.',
+    tools: 'TCP/IP · DHCP · DNS · VLAN · VPN · FortiGate',
+    icon: Network,
   },
   {
     number: '03',
     title: 'Monitoring',
-    description: 'Observer les ressources, comprendre les signaux et anticiper les incidents.',
-    tools: 'Prometheus · Grafana · Windows Exporter · Zabbix · Nagios',
+    short: 'Voir avant l’incident.',
+    description: 'Une observation utile ne remonte pas seulement des chiffres : elle relie les signaux à un contexte et donne une direction quand la pression monte.',
+    tools: 'Prometheus · Grafana · Zabbix · Nagios',
+    icon: Activity,
   },
   {
     number: '04',
     title: 'Infrastructure',
-    description: 'Faire évoluer les services avec des briques d’infrastructure cohérentes.',
-    tools: 'WSFC · Storage Replica · iSCSI · SAN · virtualisation · Docker',
+    short: 'Préparer la continuité.',
+    description: 'Concevoir des briques qui absorbent la panne : clustering, réplication, stockage partagé et virtualisation au service de la continuité.',
+    tools: 'WSFC · Storage Replica · iSCSI · SAN · Docker',
+    icon: ShieldCheck,
   },
   {
     number: '05',
     title: 'Développement',
-    description: 'Utiliser le code pour automatiser, relier et mieux comprendre les systèmes.',
-    tools: 'Node.js · React · React Native · Laravel · Django · PHP · MySQL · MariaDB',
+    short: 'Automatiser ce qui se répète.',
+    description: 'Le code comme un levier d’exploitation : scripts, interfaces et services pour supprimer les gestes manuels et rapprocher les équipes.',
+    tools: 'Node.js · React · Laravel · Django · MySQL',
+    icon: Terminal,
   },
 ];
 
-const technologyGroups = [
-  { label: 'Systèmes', items: ['Windows Server', 'Linux / Ubuntu Server', 'Active Directory'] },
-  { label: 'Réseaux', items: ['TCP/IP', 'DHCP', 'DNS', 'VLAN', 'VPN', 'FortiGate', 'GNS3'] },
-  { label: 'Monitoring', items: ['Prometheus', 'Grafana', 'Windows Exporter', 'Zabbix', 'Nagios'] },
-  { label: 'Infrastructure', items: ['WSFC', 'Storage Replica', 'iSCSI', 'SAN', 'Virtualisation', 'Docker'] },
-  { label: 'Développement', items: ['Node.js', 'React', 'React Native', 'Laravel', 'Django', 'PHP', 'MySQL', 'MariaDB'] },
+const stackGroups = [
+  { label: 'Systèmes', items: ['Windows Server', 'Linux / Ubuntu', 'Active Directory', 'PowerShell'] },
+  { label: 'Réseaux', items: ['TCP/IP', 'DHCP · DNS', 'VLAN · VPN', 'FortiGate · GNS3'] },
+  { label: 'Observabilité', items: ['Prometheus', 'Grafana', 'Windows Exporter', 'Zabbix · Nagios'] },
+  { label: 'Build', items: ['Node.js · React', 'Laravel · Django', 'Docker', 'MySQL · MariaDB'] },
 ];
 
 function Reveal({ children, delay = 0, className = '' }: { children: ReactNode; delay?: number; className?: string }) {
   const reduce = useReducedMotion();
-
   return (
     <motion.div
-      initial={reduce ? false : { opacity: 0, y: 18 }}
+      initial={reduce ? false : { opacity: 0, y: 22 }}
       whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.14 }}
-      transition={{ duration: 0.65, delay, ease: [0.21, 0.72, 0.31, 1] }}
+      viewport={{ once: true, amount: 0.12 }}
+      transition={{ duration: 0.7, delay, ease: [0.16, 1, 0.3, 1] }}
       className={className}
     >
       {children}
@@ -86,12 +103,19 @@ function Reveal({ children, delay = 0, className = '' }: { children: ReactNode; 
   );
 }
 
-function SectionLabel({ children }: { children: ReactNode }) {
-  return <p className="eyebrow">{children}</p>;
+function SectionKicker({ index, children, dark = false }: { index: string; children: ReactNode; dark?: boolean }) {
+  return (
+    <div className={`section-kicker ${dark ? 'section-kicker-dark' : ''}`}>
+      <span>{index}</span>
+      <span className="kicker-line" />
+      <span>{children}</span>
+    </div>
+  );
 }
 
 function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [activeExpertise, setActiveExpertise] = useState(0);
   const [form, setForm] = useState<ContactFields>({ nom: '', email: '', sujet: '', message: '' });
   const [errors, setErrors] = useState<ContactErrors>({});
   const [status, setStatus] = useState<FormStatus>('idle');
@@ -112,18 +136,15 @@ function Home() {
   const submitContact = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const nextErrors: ContactErrors = {};
-
     if (form.nom.trim().length < 2) nextErrors.nom = 'Indiquez votre nom.';
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) nextErrors.email = 'Indiquez une adresse e-mail valide.';
     if (form.sujet.trim().length < 3) nextErrors.sujet = 'Ajoutez un sujet.';
-    if (form.message.trim().length < 12) nextErrors.message = 'Votre message doit contenir au moins 12 caractères.';
-
+    if (form.message.trim().length < 12) nextErrors.message = 'Décrivez votre contexte en quelques mots.';
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors);
       setStatus('error');
       return;
     }
-
     setStatus('loading');
     window.setTimeout(() => {
       try {
@@ -132,7 +153,7 @@ function Home() {
       } catch {
         setStatus('error');
       }
-    }, 500);
+    }, 550);
   };
 
   const resetForm = () => {
@@ -144,41 +165,30 @@ function Home() {
   const closeMenu = () => setMenuOpen(false);
 
   return (
-    <div className="min-h-[100dvh] overflow-x-hidden bg-background text-foreground">
+    <div className="site">
       <header className="site-header">
-        <div className="shell flex h-[76px] items-center justify-between">
-          <a href="#top" onClick={closeMenu} className="brand" aria-label="Retour à l'accueil">
-            <span className="brand-mark">LK</span>
-            <span>Landry<span className="brand-dot">.</span>Net</span>
-          </a>
-
-          <nav className="hidden items-center gap-7 md:flex" aria-label="Navigation principale">
-            {navItems.map((item) => (
-              <a key={item.href} href={item.href} className="nav-link">{item.label}</a>
-            ))}
-          </nav>
-
-          <a href="#contact" className="header-cta hidden md:inline-flex">
-            Me contacter <ArrowUpRight className="h-3.5 w-3.5" />
-          </a>
-          <button
-            type="button"
-            className="menu-button md:hidden"
-            aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
-            aria-expanded={menuOpen}
-            onClick={() => setMenuOpen((open) => !open)}
-          >
-            {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
-        </div>
-
+        <a href="#top" className="brand-lockup" onClick={closeMenu} data-testid="link-home">
+          <span className="brand-logo"><img src={brandLogo} alt="Landry Net" /></span>
+          <span className="brand-wordmark">LANDRY <b>NET</b></span>
+        </a>
+        <nav className="desktop-nav" aria-label="Navigation principale">
+          {navItems.map((item, index) => (
+            <a key={item.href} href={item.href} data-testid={`link-nav-${index}`}>{item.label}<sup>0{index + 1}</sup></a>
+          ))}
+        </nav>
+        <a href="#contact" className="header-contact" data-testid="link-header-contact">
+          <span>Parlons projet</span><ArrowUpRight size={16} />
+        </a>
+        <button type="button" className="menu-toggle" aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'} aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)} data-testid="button-menu">
+          {menuOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
         {menuOpen && (
-          <div className="mobile-menu md:hidden">
-            <nav className="shell flex flex-col" aria-label="Navigation mobile">
-              {navItems.map((item) => (
-                <a key={item.href} href={item.href} onClick={closeMenu} className="mobile-link">
-                  {item.label}
-                  <ArrowUpRight className="h-4 w-4 text-primary" />
+          <div className="mobile-menu">
+            <div className="mobile-menu-top"><span>Navigation</span><span>LK / 01</span></div>
+            <nav aria-label="Navigation mobile">
+              {[...navItems, { label: 'Contact', href: '#contact' }].map((item, index) => (
+                <a key={item.href} href={item.href} onClick={closeMenu} data-testid={`link-mobile-${index}`}>
+                  <span>0{index + 1}</span>{item.label}<ArrowUpRight size={18} />
                 </a>
               ))}
             </nav>
@@ -187,197 +197,167 @@ function Home() {
       </header>
 
       <main id="top">
-        <section className="hero-section">
-          <div className="hero-glow" />
-          <div className="shell hero-grid">
+        <section className="hero" aria-labelledby="hero-title">
+          <div className="hero-grid-lines" aria-hidden="true" />
+          <div className="hero-orbit hero-orbit-one" aria-hidden="true" />
+          <div className="hero-orbit hero-orbit-two" aria-hidden="true" />
+          <div className="hero-inner shell">
             <div className="hero-copy">
-              <Reveal>
-                <SectionLabel>Landry Kayoyo — Landry Net</SectionLabel>
-              </Reveal>
-              <Reveal delay={0.08}>
-                <h1 className="hero-title">
-                  Des systèmes<br />
-                  <span>qui tiennent.</span>
-                </h1>
-              </Reveal>
+              <Reveal><p className="eyebrow">Landry Kayoyo <span>/</span> Administrateur IT</p></Reveal>
+              <Reveal delay={0.08}><h1 id="hero-title">La fiabilité<br /><em>se construit.</em></h1></Reveal>
               <Reveal delay={0.16}>
-                <p className="hero-lead">
-                  Administrateur systèmes et réseaux, je conçois, déploie et administre des infrastructures fiables, performantes et sécurisées.
-                </p>
+                <p className="hero-intro">Je relie systèmes, réseaux et code pour bâtir des infrastructures qui restent lisibles, observables et disponibles.</p>
               </Reveal>
               <Reveal delay={0.24} className="hero-actions">
-                <a href="#project" className="button-primary">
-                  Voir le projet <ArrowDownRight className="h-4 w-4" />
-                </a>
-                <a href="#about" className="button-link">
-                  Découvrir le parcours <ArrowDownRight className="h-4 w-4" />
-                </a>
+                <a href="#project" className="button button-accent" data-testid="link-hero-project">Voir le projet phare <ArrowDownRight size={17} /></a>
+                <a href="#about" className="text-link" data-testid="link-hero-about">Mon approche <ChevronRight size={16} /></a>
+              </Reveal>
+              <Reveal delay={0.3} className="hero-footnote">
+                <span className="status-dot" /> Disponible pour des environnements à structurer
               </Reveal>
             </div>
-
-            <Reveal delay={0.12} className="hero-portrait-wrap">
-              <div className="portrait-frame">
-                <img src={profileImage} alt="Landry Kayoyo lors d'une présentation technique" className="portrait-image" />
-                <div className="portrait-shade" />
-                <div className="portrait-caption">
-                  <span>Landry Kayoyo</span>
-                  <small>Administration systèmes & réseaux</small>
-                </div>
+            <Reveal delay={0.15} className="hero-visual">
+              <div className="visual-index">01 <span>—</span> 05</div>
+              <div className="portrait-card">
+                <img src={presentationImage} alt="Landry Kayoyo lors d'une présentation technique" />
+                <div className="portrait-overlay" />
+                <div className="portrait-note"><span>LANDRY / NET</span><small>Architecture & exploitation</small></div>
               </div>
-              <div className="portrait-index">01 / 05</div>
+              <div className="visual-stamp"><Cpu size={15} /><span>IT<br />SYSTEMS</span></div>
+              <div className="visual-caption">Lubumbashi, RDC <span>—</span> 2025</div>
             </Reveal>
           </div>
-          <a href="#about" className="scroll-cue">
-            <span>Défiler</span>
-            <ChevronDown className="h-4 w-4" />
-          </a>
+          <a href="#about" className="scroll-note" data-testid="link-scroll-about"><span>Défiler pour explorer</span><ChevronDown size={16} /></a>
         </section>
 
-        <section id="about" className="section-dark">
-          <div className="shell about-grid">
-            <Reveal>
-              <SectionLabel>01 — À propos</SectionLabel>
-              <h2 className="display-heading">Comprendre avant<br /><em>d’administrer.</em></h2>
-            </Reveal>
-            <Reveal delay={0.1} className="about-copy">
-              <p className="large-copy">Je m’intéresse aux systèmes qui doivent rester fiables, même quand personne ne les regarde.</p>
-              <p>Mon approche relie administration, réseau, infrastructure et sécurité. Chaque environnement mérite d’être compris dans son ensemble : ses dépendances, ses points de rupture et les choix qui le rendent plus clair.</p>
-              <div className="about-detail">
-                <div>
-                  <span className="detail-label">Formation</span>
-                  <strong>Administration Systèmes & Réseaux</strong>
-                  <small>Université Don Bosco de Lubumbashi</small>
-                </div>
-                <div>
-                  <span className="detail-label">Méthode</span>
-                  <strong>Observer. Structurer. Sécuriser.</strong>
-                  <small>Une base claire avant chaque décision technique.</small>
+        <section id="about" className="about-section section-dark">
+          <div className="shell about-layout">
+            <Reveal><SectionKicker index="01">À propos</SectionKicker></Reveal>
+            <Reveal delay={0.08} className="about-main">
+              <h2>Un bon système<br /><span>se laisse comprendre.</span></h2>
+              <div className="about-columns">
+                <p className="lead-copy">Je travaille au point de rencontre entre l’exploitation quotidienne et les décisions qui engagent une infrastructure.</p>
+                <div className="body-copy">
+                  <p>Mon rôle : clarifier les dépendances, réduire les angles morts et mettre en place des bases qui tiennent dans la durée — avant qu’un incident ne les rende visibles.</p>
+                  <a href="#expertise" className="text-link text-link-light" data-testid="link-about-expertise">Découvrir les expertises <ArrowDownRight size={16} /></a>
                 </div>
               </div>
+            </Reveal>
+            <Reveal delay={0.14} className="about-aside">
+              <div className="aside-number">01<span>/</span>03</div>
+              <div className="aside-rule" />
+              <p>Observer.<br /><em>Structurer.</em><br />Sécuriser.</p>
             </Reveal>
           </div>
         </section>
 
-        <section id="expertise" className="section-light">
+        <section id="expertise" className="expertise-section section-paper">
           <div className="shell">
-            <Reveal className="section-intro">
-              <div>
-                <SectionLabel>02 — Expertise</SectionLabel>
-                <h2 className="display-heading">Une pratique<br /><em>transversale.</em></h2>
-              </div>
-              <p>Des compétences qui se complètent pour construire des environnements lisibles et durables.</p>
+            <Reveal className="section-heading">
+              <div><SectionKicker index="02">Champ d’action</SectionKicker><h2>Les systèmes<br /><em>en profondeur.</em></h2></div>
+              <p>Une pratique transversale, du paquet réseau à l’interface d’exploitation.</p>
             </Reveal>
-
-            <div className="expertise-list">
-              {expertise.map((item, index) => (
-                <Reveal key={item.number} delay={index * 0.04}>
-                  <article className="expertise-row">
-                    <span className="expertise-number">{item.number}</span>
-                    <h3>{item.title}</h3>
-                    <p>{item.description}</p>
-                    <span className="expertise-tools">{item.tools}</span>
-                  </article>
-                </Reveal>
-              ))}
+            <div className="expertise-layout">
+              <div className="expertise-list" role="list">
+                {expertise.map((item, index) => {
+                  const Icon = item.icon;
+                  const active = index === activeExpertise;
+                  return (
+                    <Reveal key={item.number} delay={index * 0.04}>
+                      <button type="button" className={`expertise-item ${active ? 'is-active' : ''}`} onClick={() => setActiveExpertise(index)} aria-expanded={active} data-testid={`button-expertise-${index}`}>
+                        <span className="expertise-item-number">{item.number}</span>
+                        <span className="expertise-item-title">{item.title}</span>
+                        <span className="expertise-item-short">{item.short}</span>
+                        <Icon size={19} strokeWidth={1.4} />
+                      </button>
+                    </Reveal>
+                  );
+                })}
+              </div>
+              <Reveal className="expertise-detail">
+                <div className="detail-top">
+                  <span>DOMAINE / {expertise[activeExpertise].number}</span>
+                  {(() => {
+                    const ActiveIcon = expertise[activeExpertise].icon;
+                    return <ActiveIcon size={26} />;
+                  })()}
+                </div>
+                <h3>{expertise[activeExpertise].title}</h3>
+                <p>{expertise[activeExpertise].description}</p>
+                <div className="detail-tools"><span>Écosystème</span><strong>{expertise[activeExpertise].tools}</strong></div>
+                <div className="detail-corner">LANDRY<br />NET</div>
+              </Reveal>
             </div>
           </div>
         </section>
 
         <section id="project" className="project-section">
-          <div className="project-orbit project-orbit-one" />
-          <div className="project-orbit project-orbit-two" />
+          <div className="project-grid-texture" aria-hidden="true" />
           <div className="shell">
-            <Reveal>
-              <SectionLabel>03 — Projet sélectionné</SectionLabel>
-            </Reveal>
-            <div className="project-grid">
-              <Reveal delay={0.08}>
-                <h2 className="project-title">Haute disponibilité<br /><span>Windows Server.</span></h2>
-              </Reveal>
-              <Reveal delay={0.16} className="project-summary">
-                <p>Projet de fin de cycle consacré à la mise en place d’une haute disponibilité des services au moyen d’un cluster étendu.</p>
-                <p>Réflexion menée dans le contexte de la CNSS, autour d’une architecture multi-sites Kinshasa — Lubumbashi.</p>
-                <a href="#contact" className="project-link">Échanger sur le projet <ArrowUpRight className="h-4 w-4" /></a>
-              </Reveal>
+            <Reveal><SectionKicker index="03" dark>Projet phare</SectionKicker></Reveal>
+            <div className="project-intro">
+              <Reveal delay={0.08}><span className="project-label">Cas d’étude / 2025</span><h2>Haute<br /><em>disponibilité.</em></h2></Reveal>
+              <Reveal delay={0.15} className="project-description"><p>Concevoir un cluster étendu Windows Server pour maintenir les services essentiels disponibles entre Kinshasa et Lubumbashi.</p><a href="#contact" className="button button-outline" data-testid="link-project-contact">Échanger sur ce cas <ArrowUpRight size={16} /></a></Reveal>
             </div>
-            <Reveal delay={0.2} className="project-meta">
-              <div><span>Technologies</span><strong>WSFC · Storage Replica · iSCSI · SAN · PowerShell</strong></div>
-              <div><span>Focus</span><strong>Réplication · continuité de service · infrastructure</strong></div>
+            <Reveal delay={0.2} className="architecture-board">
+              <div className="board-header"><span><span className="status-dot status-dot-blue" /> Architecture cible</span><span>WSFC / STORAGE REPLICA</span></div>
+              <div className="architecture-canvas">
+                <div className="site-node node-a"><span className="node-city">SITE A</span><strong>Kinshasa</strong><small>Cluster node 01</small><div className="node-pulse"><Server size={19} /></div></div>
+                <div className="replication-line"><span>réplication synchrone</span><i /><i /><i /></div>
+                <div className="site-node node-b"><span className="node-city">SITE B</span><strong>Lubumbashi</strong><small>Cluster node 02</small><div className="node-pulse"><Server size={19} /></div></div>
+                <div className="shared-storage"><span>STORAGE</span><strong>SAN / iSCSI</strong></div>
+              </div>
+              <div className="board-footer"><span><Check size={13} /> Continuité de service</span><span><Check size={13} /> Bascule maîtrisée</span><span><Check size={13} /> Supervision active</span></div>
             </Reveal>
+            <div className="project-metrics">
+              <div><span>Contexte</span><strong>Projet de fin de cycle</strong></div>
+              <div><span>Stack</span><strong>WSFC · PowerShell · SAN</strong></div>
+              <div><span>Priorité</span><strong>Résilience multi-sites</strong></div>
+            </div>
           </div>
         </section>
 
-        <section className="section-dark technology-section">
+        <section className="stack-section section-dark">
           <div className="shell">
-            <Reveal className="section-intro section-intro-dark">
-              <div>
-                <SectionLabel>Technologies</SectionLabel>
-                <h2 className="display-heading">Les outils<br /><em>du quotidien.</em></h2>
-              </div>
-              <p>Une sélection organisée par domaine, sans surévaluer le niveau d’expertise.</p>
-            </Reveal>
-            <div className="technology-grid">
-              {technologyGroups.map((group) => (
-                <Reveal key={group.label} className="technology-group">
-                  <span className="detail-label">{group.label}</span>
-                  <ul>
-                    {group.items.map((item) => <li key={item}>{item}</li>)}
-                  </ul>
+            <Reveal className="stack-heading"><SectionKicker index="04">Boîte à outils</SectionKicker><h2>Chaque outil<br /><em>à sa place.</em></h2></Reveal>
+            <div className="stack-grid">
+              {stackGroups.map((group, index) => (
+                <Reveal key={group.label} delay={index * 0.06} className="stack-group">
+                  <span className="stack-index">0{index + 1}</span><h3>{group.label}</h3>
+                  <ul>{group.items.map((item) => <li key={item}><span />{item}</li>)}</ul>
                 </Reveal>
               ))}
             </div>
           </div>
         </section>
 
-        <section id="parcours" className="section-light">
-          <div className="shell about-grid">
-            <Reveal>
-              <SectionLabel>04 — Parcours</SectionLabel>
-              <h2 className="display-heading">Apprendre en<br /><em>construisant.</em></h2>
-            </Reveal>
-            <Reveal delay={0.1} className="timeline">
-              <span className="timeline-line" />
-              <article className="timeline-entry">
-                <span className="timeline-dot" />
-                <span className="detail-label">Formation</span>
-                <h3>Administration Systèmes & Réseaux</h3>
-                <p>Université Don Bosco de Lubumbashi</p>
-                <span className="timeline-project">Projet de fin de cycle — haute disponibilité avec cluster étendu Windows Server.</span>
-              </article>
+        <section id="parcours" className="path-section section-paper">
+          <div className="shell path-layout">
+            <Reveal><SectionKicker index="05">Parcours</SectionKicker><h2>Apprendre<br /><em>en construisant.</em></h2></Reveal>
+            <Reveal delay={0.1} className="path-content">
+              <div className="path-marker"><span>2023</span><i /></div>
+              <div className="path-copy"><span className="path-type">Formation supérieure</span><h3>Administration<br />Systèmes & Réseaux</h3><p>Université Don Bosco de Lubumbashi</p><small>Projet de fin de cycle — mise en place d’une haute disponibilité des services au moyen d’un cluster étendu.</small></div>
+              <div className="diploma-card"><img src={diplomaImage} alt="Landry Kayoyo lors de sa remise de diplôme" /><div><span>COLLATION<br />DES GRADES</span><strong>UDBL / 2023</strong></div></div>
             </Reveal>
           </div>
         </section>
 
         <section id="contact" className="contact-section">
-          <div className="shell contact-grid">
-            <Reveal>
-              <SectionLabel>05 — Contact</SectionLabel>
-              <h2 className="display-heading">Un système à<br /><em>structurer ?</em></h2>
-              <p className="contact-intro">Présentez le contexte. Un message clair est le meilleur point de départ pour une discussion utile.</p>
-            </Reveal>
-            <Reveal delay={0.1}>
+          <div className="shell contact-layout">
+            <Reveal><SectionKicker index="06" dark>Contact</SectionKicker><h2>Un système<br /><em>à structurer ?</em></h2><p className="contact-copy">Décrivez le contexte, le niveau d’urgence et ce qui doit rester debout. La première réponse commence ici.</p><div className="contact-direct"><span>Écrire directement</span><a href="mailto:hello@landrynet.dev" data-testid="link-email">hello@landrynet.dev <ArrowUpRight size={15} /></a></div></Reveal>
+            <Reveal delay={0.12}>
               {status === 'success' ? (
-                <div className="contact-success" role="status" aria-live="polite">
-                  <CheckCircle2 className="h-7 w-7 text-primary" />
-                  <h3>Brouillon enregistré.</h3>
-                  <p>Votre message a été conservé sur cet appareil. Le canal de réception devra être configuré pour permettre un envoi réel.</p>
-                  <button type="button" onClick={resetForm} className="button-outline">Écrire un autre message <ArrowUpRight className="h-4 w-4" /></button>
-                </div>
+                <div className="contact-success" role="status" aria-live="polite" data-testid="status-contact-success"><CheckCircle2 size={26} /><span>Message enregistré</span><h3>Le contexte est posé.</h3><p>Votre brouillon est conservé sur cet appareil. Merci pour la clarté — c’est déjà un bon début de projet.</p><button type="button" className="button button-outline" onClick={resetForm} data-testid="button-reset-contact">Écrire un autre message <ArrowUpRight size={16} /></button></div>
               ) : (
-                <form onSubmit={submitContact} noValidate className="contact-form">
-                  {status === 'error' && Object.keys(errors).length > 0 && (
-                    <div className="form-error" role="alert">Vérifiez les champs signalés avant de continuer.</div>
-                  )}
+                <form className="contact-form" onSubmit={submitContact} noValidate>
+                  {status === 'error' && Object.keys(errors).length > 0 && <div className="form-error" role="alert" data-testid="status-contact-error">Quelques champs demandent votre attention.</div>}
                   <div className="form-row">
-                    <label><span>Nom</span><input value={form.nom} onChange={(event) => updateField('nom', event.target.value)} aria-invalid={Boolean(errors.nom)} placeholder="Votre nom" />{errors.nom && <small>{errors.nom}</small>}</label>
-                    <label><span>E-mail</span><input type="email" value={form.email} onChange={(event) => updateField('email', event.target.value)} aria-invalid={Boolean(errors.email)} placeholder="vous@exemple.com" />{errors.email && <small>{errors.email}</small>}</label>
+                    <label><span>Votre nom</span><input data-testid="input-contact-name" value={form.nom} onChange={(event) => updateField('nom', event.target.value)} aria-invalid={Boolean(errors.nom)} placeholder="Nom et prénom" />{errors.nom && <small>{errors.nom}</small>}</label>
+                    <label><span>E-mail</span><input data-testid="input-contact-email" type="email" value={form.email} onChange={(event) => updateField('email', event.target.value)} aria-invalid={Boolean(errors.email)} placeholder="vous@exemple.com" />{errors.email && <small>{errors.email}</small>}</label>
                   </div>
-                  <label><span>Sujet</span><input value={form.sujet} onChange={(event) => updateField('sujet', event.target.value)} aria-invalid={Boolean(errors.sujet)} placeholder="Ce dont vous voulez parler" />{errors.sujet && <small>{errors.sujet}</small>}</label>
-                  <label><span>Message</span><textarea value={form.message} onChange={(event) => updateField('message', event.target.value)} aria-invalid={Boolean(errors.message)} rows={5} placeholder="Quelques lignes de contexte..." />{errors.message && <small>{errors.message}</small>}</label>
-                  <button type="submit" className="button-primary" disabled={status === 'loading'}>
-                    {status === 'loading' ? 'Enregistrement…' : 'Enregistrer le message'}
-                    <Send className="h-4 w-4" />
-                  </button>
+                  <label><span>Sujet</span><input data-testid="input-contact-subject" value={form.sujet} onChange={(event) => updateField('sujet', event.target.value)} aria-invalid={Boolean(errors.sujet)} placeholder="Infrastructure, réseau, automatisation..." />{errors.sujet && <small>{errors.sujet}</small>}</label>
+                  <label><span>Contexte</span><textarea data-testid="input-contact-message" rows={5} value={form.message} onChange={(event) => updateField('message', event.target.value)} aria-invalid={Boolean(errors.message)} placeholder="Ce qui existe, ce qui bloque, ce qui doit changer..." />{errors.message && <small>{errors.message}</small>}</label>
+                  <button type="submit" className="button button-accent form-submit" disabled={status === 'loading'} data-testid="button-submit-contact">{status === 'loading' ? 'Enregistrement…' : 'Envoyer le contexte'}<Send size={16} /></button>
                 </form>
               )}
             </Reveal>
@@ -386,31 +366,21 @@ function Home() {
       </main>
 
       <footer className="site-footer">
-        <div className="shell flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <span>© {new Date().getFullYear()} Landry Kayoyo — Landry Net</span>
-          <a href="#top">Retour en haut <ChevronDown className="h-3.5 w-3.5 rotate-180" /></a>
-        </div>
+        <div className="shell footer-inner"><a href="#top" className="footer-brand" data-testid="link-footer-home"><img src={brandLogo} alt="" />LANDRY NET</a><span>Architecture IT / systèmes / réseaux</span><a href="#top" className="footer-back" data-testid="link-footer-top">Retour en haut <ArrowUpRight size={14} /></a></div>
       </footer>
     </div>
   );
 }
 
 function Router() {
-  return (
-    <Switch>
-      <Route path="/" component={Home} />
-      <Route component={NotFound} />
-    </Switch>
-  );
+  return <Switch><Route path="/" component={Home} /><Route component={NotFound} /></Switch>;
 }
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
-        <ErrorBoundary>
-          <Router />
-        </ErrorBoundary>
+        <ErrorBoundary><Router /></ErrorBoundary>
       </WouterRouter>
     </QueryClientProvider>
   );
