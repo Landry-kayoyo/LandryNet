@@ -1,0 +1,102 @@
+Crée un portfolio personnel professionnel, moderne et haut de gamme pour Landry Kayoyo, également connu professionnellement sous le nom Landry Net.
+La maquette Figma « Digital Agency Website Freebie » fournie doit être la référence visuelle principale : "Maquette Figma" (https://reference-url-citation.invalid/0)
+Ne copie pas la maquette. Inspire-toi de son style, sa structure, ses proportions, ses espacements, sa typographie, ses cartes, ses boutons, ses animations et son approche UI/UX, puis adapte entièrement le contenu pour créer un véritable portfolio IT personnel.
+IDENTITÉ
+Le site représente Landry Kayoyo / Landry Net, orienté vers :
+- Administration systèmes et réseaux
+- Infrastructure informatique
+- Réseaux
+- Monitoring & observabilité
+- Cybersécurité
+- Virtualisation
+- Développement
+Le rendu doit être premium, technique, élégant, professionnel et crédible, et non ressembler à un simple template étudiant.
+DESIGN
+Interface principalement sombre : noir ou bleu très foncé, textes blancs et bleu moderne/électrique comme accent.
+Utiliser une excellente hiérarchie visuelle, beaucoup d’espace, des cartes élégantes, des bordures subtiles, des boutons modernes et des animations discrètes. Éviter les effets excessifs.
+Créer un design system cohérent : couleurs, typographies, tailles, espacements, grille, rayons, ombres, boutons, cartes, états hover/focus et règles responsive.
+NAVIGATION
+Menu : Accueil, À propos, Compétences, Projets, Parcours, Contact + bouton Me contacter.
+Sur mobile : menu hamburger parfaitement fonctionnel, navigation fluide et aucun débordement horizontal.
+HERO
+Afficher :
+Landry Kayoyo
+Administrateur Systèmes & Réseaux
+Ajouter une courte présentation indiquant qu’il conçoit, déploie et administre des infrastructures informatiques fiables, performantes et sécurisées.
+Boutons : Voir mes projets et Me contacter.
+Ajouter GitHub et LinkedIn uniquement si les vrais liens sont disponibles.
+Si aucune photo réelle n’est fournie, utiliser une illustration professionnelle représentant serveurs, réseaux, infrastructure ou technologie. Ne jamais générer une fausse photo de Landry.
+À PROPOS
+Présenter son orientation professionnelle et ses intérêts dans les systèmes, réseaux, infrastructure, Windows Server, Linux, monitoring et développement.
+EXPERTISE
+Créer une section « Mon expertise », inspirée de la section Services de la maquette.
+Systèmes : Windows Server, Linux/Ubuntu Server, Active Directory, services réseau, haute disponibilité.
+Réseaux : TCP/IP, DHCP, DNS, VLAN, VPN, FortiGate, GNS3.
+Monitoring : Prometheus, Grafana, Windows Exporter, Zabbix, Nagios.
+Infrastructure : WSFC, Storage Replica, iSCSI, SAN, virtualisation, Docker.
+Développement : Node.js, React, React Native, Laravel, Django, PHP, MySQL, MariaDB.
+Ne pas présenter une technologie comme expertise avancée sans justification.
+PROJETS
+Créer des cartes modernes avec titre, description, contexte, technologies et uniquement les vrais liens GitHub/Démo.
+1. Haute disponibilité Windows Server
+Projet de fin de cycle : mise en place d’une haute disponibilité des services à l’aide d’un cluster étendu sous Windows Server, dans le contexte de la CNSS, avec architecture multi-sites Kinshasa – Lubumbashi.
+Technologies : Windows Server, WSFC, Storage Replica, iSCSI, SAN, PowerShell.
+Mettre en avant haute disponibilité, réplication, infrastructure et continuité de service.
+2. Monitoring & Observabilité
+Projet basé sur Prometheus, Grafana et Windows Exporter. Présenter uniquement les éléments réellement réalisés, notamment si applicable : CPU, mémoire, disponibilité des nœuds, ressources système, événements Windows et ressources du cluster.
+3. EducationPay
+Présenter EducationPay, plateforme liée à la gestion et au paiement scolaire. Utiliser uniquement les technologies et fonctionnalités réellement réalisées.
+Ajouter les projets réseaux réellement réalisés autour de FortiGate, VPN, DHCP, DNS, GNS3 et administration réseau, ainsi que les projets de développement réellement réalisés.
+Ne jamais inventer un projet pour remplir la page.
+TECHNOLOGIES
+Créer une présentation visuelle moderne des technologies, regroupées en : Systèmes, Réseaux, Monitoring, Infrastructure et Développement. Éviter une grille interminable de logos.
+PARCOURS
+Créer une timeline moderne.
+Formation : Administration Systèmes & Réseaux — Université Don Bosco de Lubumbashi.
+Projet de fin de cycle : Haute disponibilité avec cluster étendu Windows Server.
+Ajouter d’autres expériences uniquement si les informations réelles sont disponibles.
+CONTACT
+Créer une section « Travaillons ensemble » / « Me contacter » avec un formulaire réellement fonctionnel :
+- Nom
+- E-mail
+- Sujet
+- Message
+Prévoir validation, erreurs, état de chargement, confirmation et gestion des erreurs.
+Ajouter uniquement les vraies informations de contact et plateformes professionnelles.
+FOOTER
+Afficher :
+Landry Kayoyo
+Landry Net
+Administration Systèmes & Réseaux | IT | Développement
+Ajouter navigation, réseaux sociaux réellement disponibles et copyright.
+RESPONSIVE & UX
+Le site doit être parfaitement responsive sur ordinateur, tablette et smartphone.
+Vérifier particulièrement navigation, cartes, images, textes, boutons, grilles et espacements. Aucun élément cassé ou débordement horizontal.
+Ajouter apparition au scroll, transitions douces, hover sur cartes/boutons et navigation fluide. Respecter "prefers-reduced-motion".
+SEO & ACCESSIBILITÉ
+Optimiser performances, SEO et accessibilité :
+- HTML sémantique
+- hiérarchie correcte des titres
+- textes alternatifs
+- contraste suffisant
+- navigation clavier
+- focus visibles
+- métadonnées SEO
+- titre et description professionnels
+- Open Graph si pertinent
+QUALITÉ
+Code propre, maintenable, réutilisable, performant et correctement structuré. Éviter duplications et solutions temporaires.
+RÈGLE ABSOLUE : VÉRACITÉ
+NE RIEN INVENTER CONCERNANT LANDRY KAYOYO.
+Ne jamais inventer entreprise, client, projet, expérience, certification, diplôme, statistique, chiffre, résultat, témoignage, lien, compte social ou technologie utilisée dans un projet.
+Si une information manque, utiliser un emplacement modifiable ou ne pas l’afficher.
+OBJECTIF FINAL
+Le visiteur doit comprendre immédiatement :
+1. Qui est Landry Kayoyo ;
+2. Ce qu’il fait ;
+3. Ses compétences ;
+4. Ses technologies ;
+5. Ses vrais projets ;
+6. Son parcours ;
+7. Comment le contacter.
+Le résultat doit être un portfolio IT premium, moderne, crédible, rapide, accessible, responsive et réellement fonctionnel, avec une identité visuelle fortement inspirée de la maquette Figma mais adaptée à Landry Net.
