@@ -1,0 +1,8 @@
+{
+  "version": 2,
+  "buildCommand": "pnpm run db:migrate:postgres && pnpm --filter @workspace/web run build",
+  "outputDirectory": "apps/web/dist/public",
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "/api" }
+  ]
+}
