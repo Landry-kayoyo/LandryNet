@@ -180,43 +180,7 @@
 .detail-tools strong { max-width: 350px; color: rgba(238,239,226,.65); font-size: .75rem; font-weight: 400; line-height: 1.6; }
 .detail-corner { position: absolute; right: 2.4rem; bottom: 2rem; color: rgba(238,239,226,.16); font-family: var(--app-font-mono); font-size: .7rem; letter-spacing: .1em; line-height: 1.2; }
 
-/* Project */
-.project-section { position: relative; overflow: hidden; padding: 10.5rem 0 7rem; background: var(--blue); color: var(--ink); }
-.project-grid-texture { position: absolute; inset: 0; opacity: .28; background-image: linear-gradient(rgba(13,17,24,.18) 1px, transparent 1px), linear-gradient(90deg, rgba(13,17,24,.18) 1px, transparent 1px); background-size: 80px 80px; pointer-events: none; }
-.project-section .shell { position: relative; }
-.project-intro { display: grid; grid-template-columns: 1.1fr .65fr; gap: 7rem; align-items: end; margin-top: 4rem; }
-.project-label { color: rgba(13,17,24,.62); font-family: var(--app-font-mono); font-size: .59rem; letter-spacing: .12em; text-transform: uppercase; }
-.project-intro h2 { margin-top: 1.4rem; font-family: var(--app-font-display); font-size: clamp(5rem, 12vw, 12.4rem); font-weight: 600; letter-spacing: -.13em; line-height: .76; }
-.project-intro h2 em { color: var(--paper); font-style: normal; }
-.project-description { max-width: 345px; padding-bottom: .7rem; }
-.project-description p { font-size: 1.03rem; line-height: 1.65; }
-.project-description .button { margin-top: 2rem; border-color: var(--ink); color: var(--ink); }
-.project-description .button:hover { border-color: var(--paper); color: var(--paper); }
-.architecture-board { margin-top: 8.3rem; border: 1px solid rgba(13,17,24,.48); background: rgba(238,239,226,.13); }
-.board-header, .board-footer { display: flex; justify-content: space-between; gap: 1rem; padding: 1rem 1.3rem; color: rgba(13,17,24,.68); font-family: var(--app-font-mono); font-size: .53rem; letter-spacing: .1em; text-transform: uppercase; }
-.board-header { border-bottom: 1px solid rgba(13,17,24,.3); }
-.board-header span:first-child, .board-footer span { display: inline-flex; align-items: center; gap: .45rem; }
-.architecture-canvas { position: relative; display: flex; align-items: center; justify-content: space-between; min-height: 270px; padding: 3rem 10%; }
-.site-node { position: relative; display: flex; flex-direction: column; width: 190px; padding: 1.25rem; border: 1px solid rgba(13,17,24,.55); background: rgba(238,239,226,.28); }
-.site-node::after { position: absolute; inset: 7px; border: 1px solid rgba(13,17,24,.22); content: ''; pointer-events: none; }
-.node-city { color: rgba(13,17,24,.57); font-family: var(--app-font-mono); font-size: .5rem; letter-spacing: .13em; }
-.site-node strong { margin-top: 1rem; font-family: var(--app-font-display); font-size: 1.35rem; letter-spacing: -.06em; }
-.site-node small { margin-top: .25rem; color: rgba(13,17,24,.58); font-size: .73rem; }
-.node-pulse { display: grid; width: 35px; height: 35px; margin-top: 1.5rem; place-items: center; border-radius: 50%; background: var(--lime); }
-.replication-line { display: flex; align-items: center; justify-content: center; gap: 5px; width: 24%; border-top: 1px dashed rgba(13,17,24,.65); }
-.replication-line span { position: absolute; margin-top: -2.6rem; color: rgba(13,17,24,.63); font-family: var(--app-font-mono); font-size: .5rem; letter-spacing: .07em; text-transform: uppercase; }
-.replication-line i { width: 4px; height: 4px; border-radius: 50%; background: var(--ink); }
-.shared-storage { position: absolute; bottom: 1.8rem; left: 50%; display: flex; gap: .6rem; align-items: center; border-top: 1px solid rgba(13,17,24,.35); padding-top: .5rem; transform: translateX(-50%); }
-.shared-storage span { color: rgba(13,17,24,.58); font-family: var(--app-font-mono); font-size: .5rem; letter-spacing: .1em; }
-.shared-storage strong { font-family: var(--app-font-display); font-size: .88rem; letter-spacing: -.04em; }
-.board-footer { border-top: 1px solid rgba(13,17,24,.3); }
-.board-footer span svg { color: #1e6f3d; }
-.project-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; margin-top: 2rem; border-top: 1px solid rgba(13,17,24,.4); padding-top: 1.2rem; }
-.project-metrics div { display: flex; flex-direction: column; gap: .45rem; }
-.project-metrics span { color: rgba(13,17,24,.56); font-family: var(--app-font-mono); font-size: .53rem; letter-spacing: .1em; text-transform: uppercase; }
-.project-metrics strong { font-family: var(--app-font-display); font-size: 1rem; font-weight: 600; letter-spacing: -.03em; }
-
-/* Stack / path / contact */
+/* Stack / terrain / path / contact */
 .stack-section { padding: 10rem 0 11rem; }
 .stack-heading h2 { margin-top: 2.3rem; color: var(--paper); }
 .stack-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2.5rem; margin-top: 7rem; }
@@ -226,6 +190,28 @@
 .stack-group ul { display: flex; flex-direction: column; gap: .68rem; margin: 1.5rem 0 0; padding: 0; list-style: none; color: rgba(238,239,226,.55); font-size: .82rem; }
 .stack-group li { display: flex; align-items: center; gap: .55rem; }
 .stack-group li span { width: 5px; height: 5px; border-radius: 50%; background: var(--lime); }
+.terrain-section { overflow: hidden; padding: 10.5rem 0 11.5rem; }
+.terrain-heading { display: flex; align-items: end; justify-content: space-between; gap: 4rem; }
+.terrain-heading h2 { margin: 2.3rem 0 0; font-family: var(--app-font-display); font-size: clamp(3.8rem, 7vw, 7.2rem); font-weight: 600; letter-spacing: -.1em; line-height: .86; }
+.terrain-heading h2 em { color: #147fa8; font-style: normal; }
+.terrain-heading > p { max-width: 330px; margin-bottom: .4rem; color: rgba(13,17,24,.63); font-size: .95rem; line-height: 1.75; }
+.field-notes { display: grid; grid-template-columns: 1.15fr .72fr 1.13fr; grid-template-rows: auto auto; gap: 4.5rem 2.8rem; margin-top: 7rem; }
+.field-note figure { position: relative; margin: 0; overflow: hidden; background: #b4b6ab; }
+.field-note img { display: block; width: 100%; height: 100%; object-fit: cover; filter: saturate(.68) contrast(1.03); transition: filter 500ms ease, transform 800ms cubic-bezier(.16,1,.3,1); }
+.field-note:hover img { filter: saturate(.9) contrast(1.03); transform: scale(1.035); }
+.field-note figure::after { position: absolute; inset: 12px; border: 1px solid rgba(238,239,226,.62); content: ''; pointer-events: none; }
+.field-note figcaption { position: absolute; right: 1.5rem; bottom: 1.4rem; left: 1.5rem; z-index: 1; display: flex; flex-direction: column; gap: .4rem; color: var(--paper); }
+.field-note figcaption span { color: var(--lime); font-family: var(--app-font-mono); font-size: .53rem; letter-spacing: .1em; text-transform: uppercase; }
+.field-note figcaption strong { max-width: 260px; font-family: var(--app-font-display); font-size: 1.35rem; letter-spacing: -.05em; line-height: .95; }
+.field-note > p { max-width: 285px; margin-top: 1rem; color: rgba(13,17,24,.6); font-size: .83rem; line-height: 1.65; }
+.field-note-large { grid-column: 1 / span 2; }
+.field-note-large figure { aspect-ratio: 1.75; }
+.field-note-tall { grid-column: 3; grid-row: 1 / span 2; align-self: center; }
+.field-note-tall figure { aspect-ratio: .73; }
+.field-note-wide { grid-column: 1; grid-row: 2; }
+.field-note-wide figure { aspect-ratio: 1.45; }
+.field-note-portrait { grid-column: 2; grid-row: 2; }
+.field-note-portrait figure { aspect-ratio: .95; }
 .path-section { padding: 10.5rem 0 12rem; }
 .path-layout { display: grid; grid-template-columns: 1fr 2.15fr; gap: 8rem; }
 .path-layout h2 { margin-top: 2.2rem; font-size: clamp(3.5rem, 6vw, 6.4rem); }
@@ -297,18 +283,15 @@
   .hero h1 { font-size: clamp(4.5rem, 16vw, 7.4rem); }
   .hero-visual { width: min(100% - 1.8rem, 450px); margin: 5.5rem 0 0 .9rem; }
   .scroll-note { bottom: 1.5rem; left: 20px; }
-  .about-section, .expertise-section, .stack-section, .path-section, .contact-section { padding-block: 7.5rem; }
+  .about-section, .expertise-section, .stack-section, .terrain-section, .path-section, .contact-section { padding-block: 7.5rem; }
   .about-layout, .path-layout, .contact-layout { display: block; }
   .about-main, .path-content { margin-top: 5rem; }
   .about-columns { gap: 2.5rem; }
   .expertise-layout { display: block; margin-top: 4.5rem; }
   .expertise-detail { margin-top: 2rem; }
-  .project-section { padding-block: 7.5rem; }
-  .project-intro { display: block; margin-top: 3.5rem; }
-  .project-description { margin-top: 3rem; }
-  .architecture-board { margin-top: 5.5rem; }
-  .architecture-canvas { padding-inline: 4%; }
-  .site-node { width: 150px; }
+  .terrain-heading { display: block; }
+  .terrain-heading > p { margin-top: 2rem; }
+  .field-notes { gap: 3.2rem 1.5rem; margin-top: 4.5rem; }
   .stack-grid { grid-template-columns: repeat(2, 1fr); margin-top: 4.5rem; }
   .path-content { grid-template-columns: 34px minmax(0, 1fr); gap: 1.5rem; }
   .diploma-card { grid-column: 2; width: min(100%, 220px); margin-top: 2.5rem; }
@@ -335,15 +318,11 @@
   .expertise-item svg { grid-column: 3; grid-row: 1 / span 2; }
   .expertise-detail { min-height: 350px; padding: 1.7rem; }
   .expertise-detail h3 { margin-top: 4rem; }
-  .project-intro h2 { font-size: clamp(5.4rem, 22vw, 8rem); }
-  .architecture-board { margin-top: 4.5rem; }
-  .board-header, .board-footer { align-items: flex-start; flex-direction: column; gap: .7rem; }
-  .architecture-canvas { min-height: 410px; flex-direction: column; gap: 2.7rem; padding-top: 2rem; }
-  .site-node { width: min(100%, 220px); }
-  .replication-line { width: 1px; height: 42px; border-top: 0; border-left: 1px dashed rgba(13,17,24,.65); }
-  .replication-line span { width: 130px; margin: 0 0 0 2.5rem; }
-  .shared-storage { bottom: 1.2rem; }
-  .project-metrics { grid-template-columns: 1fr; gap: 1rem; }
+  .field-notes { display: block; }
+  .field-note { margin-top: 3.5rem; }
+  .field-note:first-child { margin-top: 0; }
+  .field-note-large figure, .field-note-tall figure, .field-note-wide figure, .field-note-portrait figure { aspect-ratio: 1.08; }
+  .field-note-tall, .field-note-wide, .field-note-portrait { width: 100%; }
   .stack-grid { grid-template-columns: 1fr 1fr; gap: 2.8rem 1.4rem; }
   .stack-group h3 { font-size: 1.2rem; }
   .path-content { margin-top: 3.8rem; }

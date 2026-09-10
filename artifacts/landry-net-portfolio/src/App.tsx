@@ -7,7 +7,6 @@ import {
   Activity,
   ArrowDownRight,
   ArrowUpRight,
-  Check,
   CheckCircle2,
   ChevronDown,
   ChevronRight,
@@ -24,6 +23,10 @@ import { Route, Switch, Router as WouterRouter } from 'wouter';
 import brandLogo from '@assets/web-app-manifest-512x512_1789029553744.png';
 import presentationImage from '@assets/IMG_7917.JPG_1789029578939.jpeg';
 import diplomaImage from '@assets/WhatsApp_Image_2026-08-08_at_15.31.48_(1)_1789029615897.jpeg';
+import seatedPresentationImage from '@assets/IMG_7913.JPG_1789030226227.jpeg';
+import writingPresentationImage from '@assets/IMG_7934.JPG_1789030226229.jpeg';
+import celebrationImage from '@assets/IMG_7942.JPG_1789030226230.jpeg';
+import portraitCelebrationImage from '@assets/IMG_7944.JPG_1789030226232.jpeg';
 
 const queryClient = new QueryClient();
 
@@ -34,7 +37,7 @@ type ContactErrors = Partial<Record<keyof ContactFields, string>>;
 const navItems = [
   { label: 'À propos', href: '#about' },
   { label: 'Expertise', href: '#expertise' },
-  { label: 'Projet', href: '#project' },
+  { label: 'Terrain', href: '#terrain' },
   { label: 'Parcours', href: '#parcours' },
 ];
 
@@ -82,10 +85,45 @@ const expertise = [
 ];
 
 const stackGroups = [
-  { label: 'Systèmes', items: ['Windows Server', 'Linux / Ubuntu', 'Active Directory', 'PowerShell'] },
-  { label: 'Réseaux', items: ['TCP/IP', 'DHCP · DNS', 'VLAN · VPN', 'FortiGate · GNS3'] },
-  { label: 'Observabilité', items: ['Prometheus', 'Grafana', 'Windows Exporter', 'Zabbix · Nagios'] },
-  { label: 'Build', items: ['Node.js · React', 'Laravel · Django', 'Docker', 'MySQL · MariaDB'] },
+  { label: 'Fondations', items: ['Windows Server', 'Linux / Ubuntu', 'Active Directory'] },
+  { label: 'Connectivité', items: ['TCP/IP · DHCP · DNS', 'VLAN · VPN', 'FortiGate'] },
+  { label: 'Observabilité', items: ['Prometheus', 'Grafana', 'Zabbix'] },
+  { label: 'Automatisation', items: ['PowerShell', 'Node.js · React', 'Docker'] },
+];
+
+const fieldNotes = [
+  {
+    number: '01',
+    label: 'Transmission',
+    title: 'Rendre le complexe lisible.',
+    description: 'Présenter, documenter et transmettre : une infrastructure devient solide quand elle peut être comprise par toute une équipe.',
+    image: seatedPresentationImage,
+    className: 'field-note-large',
+  },
+  {
+    number: '02',
+    label: 'Méthode',
+    title: 'Observer avant d’agir.',
+    description: 'Chaque décision technique commence par le contexte, les contraintes et une lecture précise du terrain.',
+    image: writingPresentationImage,
+    className: 'field-note-tall',
+  },
+  {
+    number: '03',
+    label: 'Collectif',
+    title: 'Construire avec les autres.',
+    description: 'La technique prend sa valeur quand elle soutient les personnes, les usages et les objectifs du quotidien.',
+    image: celebrationImage,
+    className: 'field-note-wide',
+  },
+  {
+    number: '04',
+    label: 'Présence',
+    title: 'Rester proche du réel.',
+    description: 'Une pratique professionnelle se mesure dans l’action : écouter, ajuster et laisser derrière soi une base plus claire.',
+    image: portraitCelebrationImage,
+    className: 'field-note-portrait',
+  },
 ];
 
 function Reveal({ children, delay = 0, className = '' }: { children: ReactNode; delay?: number; className?: string }) {
@@ -209,7 +247,7 @@ function Home() {
                 <p className="hero-intro">Je relie systèmes, réseaux et code pour bâtir des infrastructures qui restent lisibles, observables et disponibles.</p>
               </Reveal>
               <Reveal delay={0.24} className="hero-actions">
-                <a href="#project" className="button button-accent" data-testid="link-hero-project">Voir le projet phare <ArrowDownRight size={17} /></a>
+                <a href="#terrain" className="button button-accent" data-testid="link-hero-terrain">Voir mon approche <ArrowDownRight size={17} /></a>
                 <a href="#about" className="text-link" data-testid="link-hero-about">Mon approche <ChevronRight size={16} /></a>
               </Reveal>
               <Reveal delay={0.3} className="hero-footnote">
@@ -291,40 +329,34 @@ function Home() {
           </div>
         </section>
 
-        <section id="project" className="project-section">
-          <div className="project-grid-texture" aria-hidden="true" />
-          <div className="shell">
-            <Reveal><SectionKicker index="03" dark>Projet phare</SectionKicker></Reveal>
-            <div className="project-intro">
-              <Reveal delay={0.08}><span className="project-label">Cas d’étude / 2025</span><h2>Haute<br /><em>disponibilité.</em></h2></Reveal>
-              <Reveal delay={0.15} className="project-description"><p>Concevoir un cluster étendu Windows Server pour maintenir les services essentiels disponibles entre Kinshasa et Lubumbashi.</p><a href="#contact" className="button button-outline" data-testid="link-project-contact">Échanger sur ce cas <ArrowUpRight size={16} /></a></Reveal>
-            </div>
-            <Reveal delay={0.2} className="architecture-board">
-              <div className="board-header"><span><span className="status-dot status-dot-blue" /> Architecture cible</span><span>WSFC / STORAGE REPLICA</span></div>
-              <div className="architecture-canvas">
-                <div className="site-node node-a"><span className="node-city">SITE A</span><strong>Kinshasa</strong><small>Cluster node 01</small><div className="node-pulse"><Server size={19} /></div></div>
-                <div className="replication-line"><span>réplication synchrone</span><i /><i /><i /></div>
-                <div className="site-node node-b"><span className="node-city">SITE B</span><strong>Lubumbashi</strong><small>Cluster node 02</small><div className="node-pulse"><Server size={19} /></div></div>
-                <div className="shared-storage"><span>STORAGE</span><strong>SAN / iSCSI</strong></div>
-              </div>
-              <div className="board-footer"><span><Check size={13} /> Continuité de service</span><span><Check size={13} /> Bascule maîtrisée</span><span><Check size={13} /> Supervision active</span></div>
-            </Reveal>
-            <div className="project-metrics">
-              <div><span>Contexte</span><strong>Projet de fin de cycle</strong></div>
-              <div><span>Stack</span><strong>WSFC · PowerShell · SAN</strong></div>
-              <div><span>Priorité</span><strong>Résilience multi-sites</strong></div>
-            </div>
-          </div>
-        </section>
-
         <section className="stack-section section-dark">
           <div className="shell">
-            <Reveal className="stack-heading"><SectionKicker index="04">Boîte à outils</SectionKicker><h2>Chaque outil<br /><em>à sa place.</em></h2></Reveal>
+            <Reveal className="stack-heading"><SectionKicker index="03">Boîte à outils</SectionKicker><h2>Peu d’outils.<br /><em>Bien choisis.</em></h2></Reveal>
             <div className="stack-grid">
               {stackGroups.map((group, index) => (
                 <Reveal key={group.label} delay={index * 0.06} className="stack-group">
                   <span className="stack-index">0{index + 1}</span><h3>{group.label}</h3>
                   <ul>{group.items.map((item) => <li key={item}><span />{item}</li>)}</ul>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="terrain" className="terrain-section section-paper">
+          <div className="shell">
+            <Reveal className="terrain-heading">
+              <div><SectionKicker index="04">Sur le terrain</SectionKicker><h2>La technique<br /><em>reste humaine.</em></h2></div>
+              <p>Une présence professionnelle, entre transmission, observation et action. Ces images racontent la manière dont je travaille : avec précision, curiosité et sens du collectif.</p>
+            </Reveal>
+            <div className="field-notes">
+              {fieldNotes.map((note, index) => (
+                <Reveal key={note.number} delay={index * 0.06} className={`field-note ${note.className}`}>
+                  <figure>
+                    <img src={note.image} alt={note.title} loading={index === 0 ? 'eager' : 'lazy'} />
+                    <figcaption><span>{note.number} / {note.label}</span><strong>{note.title}</strong></figcaption>
+                  </figure>
+                  <p>{note.description}</p>
                 </Reveal>
               ))}
             </div>
