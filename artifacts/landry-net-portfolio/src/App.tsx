@@ -357,7 +357,7 @@ function Home() {
             </Reveal>
             <Reveal delay={0.1}>
               {status === 'success' ? (
-                <div className="contact-success">
+                <div className="contact-success" role="status" aria-live="polite">
                   <CheckCircle2 className="h-7 w-7 text-primary" />
                   <h3>Brouillon enregistré.</h3>
                   <p>Votre message a été conservé sur cet appareil. Le canal de réception devra être configuré pour permettre un envoi réel.</p>
