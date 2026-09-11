@@ -1,6 +1,9 @@
 import { createHash, randomBytes, scrypt as scryptCallback, timingSafeEqual } from "node:crypto";
+import { mkdirSync, renameSync } from "node:fs";
+import { resolve } from "node:path";
 import { promisify } from "node:util";
 import { Router, type IRouter, type Request, type Response, type NextFunction } from "express";
+import multer from "multer";
 import {
   createAdminSession,
   createAdminUser,
@@ -21,6 +24,13 @@ const scrypt = promisify(scryptCallback);
 const router: IRouter = Router();
 const SESSION_COOKIE = "landry_admin_session";
 const SESSION_DAYS = 7;
+const uploadDirectory = resolve(process.cwd(), "uploads");
+mkdirSync(uploadDirectory, { recursive: true });
+const upload = multer({
+  dest: uploadDirectory,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, callback) => callback(null, file.mimetype.startsWith("image/")),
+});
 
 function tokenHash(token: string) {
   return createHash("sha256").update(token).digest("hex");
@@ -102,10 +112,39 @@ router.post("/logout", async (req, res, next) => {
 
 router.get("/session", requireAdmin, (_req, res) => res.json({ authenticated: true }));
 
+router.post("/upload", requireAdmin, upload.single("file"), (req, res) => {
+  if (!req.file) {
+    res.status(400).json({ error: "Une image valide est requise." });
+    return;
+  }
+  const extension = req.file.mimetype.split("/")[1]?.replace("jpeg", "jpg") ?? "bin";
+  const filename = `${req.file.filename}.${extension}`;
+  const currentPath = resolve(uploadDirectory, req.file.filename);
+  const finalPath = resolve(uploadDirectory, filename);
+  renameSync(currentPath, finalPath);
+  res.status(201).json({ url: `${req.protocol}://${req.get("host")}/api/uploads/${filename}` });
+});
+
 router.get("/dashboard", requireAdmin, async (_req, res, next) => {
  try {
   const items = await listCmsItems(undefined, true);
   const messages = await listContactMessages();
+  const evolution = Array.from({ length: 6 }, (_, index) => {
+    const date = new Date();
+    date.setDate(1);
+    date.setMonth(date.getMonth() - (5 - index));
+    return { date: date.toISOString().slice(0, 7), label: date.toLocaleDateString("fr-FR", { month: "short" }).replace(".", ""), contents: 0, messages: 0 };
+  });
+  for (const item of items) {
+    const month = item.createdAt.slice(0, 7);
+    const point = evolution.find((entry) => entry.date === month);
+    if (point) point.contents += 1;
+  }
+  for (const message of messages) {
+    const month = String(message.created_at).slice(0, 7);
+    const point = evolution.find((entry) => entry.date === month);
+    if (point) point.messages += 1;
+  }
   res.json({
     counts: {
       projects: items.filter((item) => item.type === "project").length,
@@ -114,6 +153,7 @@ router.get("/dashboard", requireAdmin, async (_req, res, next) => {
       timeline: items.filter((item) => item.type === "timeline").length,
       messages: messages.length,
       unreadMessages: messages.filter((message) => !message.is_read).length,
+      evolution,
     },
     recentMessages: messages.slice(0, 5),
   });

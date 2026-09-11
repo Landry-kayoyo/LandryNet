@@ -1,5 +1,5 @@
 import { mkdirSync } from "node:fs";
-import { dirname } from "node:path";
+import { dirname, resolve } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import pg from "pg";
 
@@ -9,7 +9,7 @@ if (driver !== "sqlite" && driver !== "postgres") {
   throw new Error(`Unsupported DB_DRIVER "${driver}". Use "sqlite" or "postgres".`);
 }
 
-const sqlitePath = process.env.SQLITE_PATH ?? "./data/landry-net.sqlite";
+const sqlitePath = process.env.SQLITE_PATH ?? resolve(import.meta.dirname, "../../data/landry-net.sqlite");
 
 function createSqliteDatabase() {
   mkdirSync(dirname(sqlitePath), { recursive: true });

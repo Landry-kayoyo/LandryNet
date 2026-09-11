@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" role="img" aria-labelledby="title desc">
+  <title id="title">Landry Net publication</title>
+  <desc id="desc">Visuel abstrait de réseau et d'infrastructure</desc>
+  <rect width="1200" height="700" fill="#f2f6f3"/>
+  <path d="M0 560h1200M0 420h1200M0 280h1200M200 0v700M480 0v700M760 0v700M1040 0v700" stroke="#d4e0dc" stroke-width="2"/>
+  <path d="M120 510 350 330 590 470 820 190 1080 350" fill="none" stroke="#147fa8" stroke-width="8"/>
+  <path d="M350 330 350 150M590 470v130M820 190v260" fill="none" stroke="#c8eb4e" stroke-width="8"/>
+  <g fill="#0d1118" stroke="#f2f6f3" stroke-width="8">
+    <circle cx="120" cy="510" r="22"/><circle cx="350" cy="330" r="22"/><circle cx="590" cy="470" r="22"/><circle cx="820" cy="190" r="22"/><circle cx="1080" cy="350" r="22"/>
+  </g>
+  <text x="64" y="90" fill="#147fa8" font-family="monospace" font-size="22" letter-spacing="6">LANDRY / NET</text>
+  <text x="64" y="640" fill="#0d1118" font-family="sans-serif" font-size="42" font-weight="700">INFRASTRUCTURE / SYSTEMS / NETWORKS</text>
+</svg>

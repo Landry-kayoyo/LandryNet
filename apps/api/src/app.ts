@@ -1,5 +1,6 @@
 import express, { type Express } from "express";
 import cors from "cors";
+import { resolve } from "node:path";
 import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
@@ -28,6 +29,7 @@ app.use(
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use("/api/uploads", express.static(resolve(process.cwd(), "uploads")));
 
 app.use("/api", router);
 
