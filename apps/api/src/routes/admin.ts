@@ -2,7 +2,7 @@ import { createHash, randomBytes, scrypt as scryptCallback, timingSafeEqual } fr
 import { mkdirSync, renameSync } from "node:fs";
 import { resolve } from "node:path";
 import { promisify } from "node:util";
-import { Router, type Request, type Response, type NextFunction } from "express";
+import { Router } from "express";
 import multer from "multer";
 import {
   createAdminSession,
@@ -24,7 +24,7 @@ const scrypt = promisify(scryptCallback);
 const router = Router();
 const SESSION_COOKIE = "landry_admin_session";
 const SESSION_DAYS = 7;
-const uploadDirectory = resolve(process.cwd(), "uploads");
+const uploadDirectory = process.env.VERCEL ? "/tmp/uploads" : resolve(process.cwd(), "uploads");
 mkdirSync(uploadDirectory, { recursive: true });
 const upload = multer({
   dest: uploadDirectory,
@@ -50,12 +50,12 @@ async function verifyPassword(password: string, stored: string) {
   return expected.length === actual.length && timingSafeEqual(expected, actual);
 }
 
-function readSession(req: Request) {
-  const cookie = req.headers.cookie?.split(";").map((item) => item.trim()).find((item) => item.startsWith(`${SESSION_COOKIE}=`));
+function readSession(req: any) {
+  const cookie = req.headers.cookie?.split(";").map((item: string) => item.trim()).find((item: string) => item.startsWith(`${SESSION_COOKIE}=`));
   return cookie?.slice(`${SESSION_COOKIE}=`.length);
 }
 
-async function requireAdmin(req: Request, res: Response, next: NextFunction) {
+async function requireAdmin(req: any, res: any, next: any) {
   const token = readSession(req);
   try {
     const session = token ? await getAdminSession(tokenHash(token)) : null;
@@ -70,7 +70,7 @@ async function requireAdmin(req: Request, res: Response, next: NextFunction) {
   }
 }
 
-router.post("/login", async (req, res, next) => {
+router.post("/login", async (req: any, res: any, next: any) => {
   try {
     const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
     const password = typeof req.body?.password === "string" ? req.body.password : "";
@@ -101,7 +101,7 @@ router.post("/login", async (req, res, next) => {
   }
 });
 
-router.post("/logout", async (req, res, next) => {
+router.post("/logout", async (req: any, res: any, next: any) => {
   const token = readSession(req);
   try {
     if (token) await deleteAdminSession(tokenHash(token));
@@ -110,9 +110,9 @@ router.post("/logout", async (req, res, next) => {
   } catch (error) { next(error); }
 });
 
-router.get("/session", requireAdmin, (_req, res) => res.json({ authenticated: true }));
+router.get("/session", requireAdmin, (_req: any, res: any) => res.json({ authenticated: true }));
 
-router.post("/upload", requireAdmin, upload.single("file"), (req, res) => {
+router.post("/upload", requireAdmin, upload.single("file"), (req: any, res: any) => {
   if (!req.file) {
     res.status(400).json({ error: "Une image valide est requise." });
     return;
@@ -125,7 +125,7 @@ router.post("/upload", requireAdmin, upload.single("file"), (req, res) => {
   res.status(201).json({ url: `${req.protocol}://${req.get("host")}/api/uploads/${filename}` });
 });
 
-router.get("/dashboard", requireAdmin, async (_req, res, next) => {
+router.get("/dashboard", requireAdmin, async (_req: any, res: any, next: any) => {
  try {
   const items = await listCmsItems(undefined, true);
   const messages = await listContactMessages();
@@ -160,7 +160,7 @@ router.get("/dashboard", requireAdmin, async (_req, res, next) => {
  } catch (error) { next(error); }
 });
 
-router.post("/demo-data", requireAdmin, async (_req, res, next) => {
+router.post("/demo-data", requireAdmin, async (_req: any, res: any, next: any) => {
  try {
   const demoItems = [
     { type: "project" as const, title: "[TEST] Continuité de service", data: { description: "Une base de continuité pour absorber les pannes sans perdre le fil opérationnel.", context: "Les services essentiels devaient rester disponibles malgré les incidents matériels.", details: "Identification des dépendances, stratégie de reprise et tests réguliers des scénarios de panne.", technologies: "Windows Server · WSFC · Storage Replica · Docker", category: "Infrastructure" } },
@@ -199,14 +199,14 @@ router.post("/demo-data", requireAdmin, async (_req, res, next) => {
  } catch (error) { next(error); }
 });
 
-router.get("/items", requireAdmin, async (req, res, next) => {
+router.get("/items", requireAdmin, async (req: any, res: any, next: any) => {
  try {
   const type = typeof req.query.type === "string" ? req.query.type : undefined;
   res.json(await listCmsItems(type as Parameters<typeof listCmsItems>[0], true));
  } catch (error) { next(error); }
 });
 
-router.post("/items", requireAdmin, async (req, res, next) => {
+router.post("/items", requireAdmin, async (req: any, res: any, next: any) => {
   try {
     const { type, title, data, published, visible, sortOrder } = req.body ?? {};
     if (!type || !title || typeof title !== "string" || typeof data !== "object") {
@@ -220,7 +220,7 @@ router.post("/items", requireAdmin, async (req, res, next) => {
   }
 });
 
-router.patch("/items/:id", requireAdmin, async (req, res, next) => {
+router.patch("/items/:id", requireAdmin, async (req: any, res: any, next: any) => {
   try {
     const id = Number(req.params.id);
     if (!Number.isInteger(id) || !(await updateCmsItem(id, req.body ?? {}))) {
@@ -233,17 +233,17 @@ router.patch("/items/:id", requireAdmin, async (req, res, next) => {
   }
 });
 
-router.delete("/items/:id", requireAdmin, async (req, res, next) => {
+router.delete("/items/:id", requireAdmin, async (req: any, res: any, next: any) => {
  try {
   const deleted = await deleteCmsItem(Number(req.params.id));
   res.status(deleted ? 204 : 404).end();
  } catch (error) { next(error); }
 });
 
-router.put("/profile", requireAdmin, async (req, res, next) => { try { await updateSingleton("site_profile", req.body ?? {}); res.json({ status: "updated" }); } catch (error) { next(error); } });
-router.put("/settings", requireAdmin, async (req, res, next) => { try { await updateSingleton("site_settings", req.body ?? {}); res.json({ status: "updated" }); } catch (error) { next(error); } });
+router.put("/profile", requireAdmin, async (req: any, res: any, next: any) => { try { await updateSingleton("site_profile", req.body ?? {}); res.json({ status: "updated" }); } catch (error) { next(error); } });
+router.put("/settings", requireAdmin, async (req: any, res: any, next: any) => { try { await updateSingleton("site_settings", req.body ?? {}); res.json({ status: "updated" }); } catch (error) { next(error); } });
 
-router.get("/messages", requireAdmin, async (req, res, next) => {
+router.get("/messages", requireAdmin, async (req: any, res: any, next: any) => {
  try {
   const query = typeof req.query.q === "string" ? req.query.q.toLowerCase() : "";
   const unreadOnly = req.query.unread === "true";
@@ -252,14 +252,14 @@ router.get("/messages", requireAdmin, async (req, res, next) => {
  } catch (error) { next(error); }
 });
 
-router.patch("/messages/:id/read", requireAdmin, async (req, res, next) => {
+router.patch("/messages/:id/read", requireAdmin, async (req: any, res: any, next: any) => {
  try {
   const updated = await markContactMessageRead(Number(req.params.id), req.body?.isRead !== false);
   res.status(updated ? 200 : 404).json({ status: updated ? "updated" : "not-found" });
  } catch (error) { next(error); }
 });
 
-router.delete("/messages/:id", requireAdmin, async (req, res, next) => {
+router.delete("/messages/:id", requireAdmin, async (req: any, res: any, next: any) => {
  try {
   const deleted = await deleteContactMessage(Number(req.params.id));
   res.status(deleted ? 204 : 404).end();

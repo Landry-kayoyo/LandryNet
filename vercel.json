@@ -1,8 +1,12 @@
 {
   "version": 2,
-  "buildCommand": "pnpm run db:migrate:postgres && pnpm --filter @workspace/web run build",
+  "buildCommand": "pnpm --filter @workspace/api run build && pnpm run db:migrate:postgres && pnpm --filter @workspace/web run build",
   "outputDirectory": "apps/web/dist/public",
   "rewrites": [
-    { "source": "/api/:path*", "destination": "/api" }
+    { "source": "/api/:path*", "destination": "/api" },
+    { "source": "/googlec2efbadc182e829e.html", "destination": "/googlec2efbadc182e829e.html" },
+    { "source": "/admin", "destination": "/index.html" },
+    { "source": "/admin/:path*", "destination": "/index.html" },
+    { "source": "/:path*", "destination": "/index.html" }
   ]
 }

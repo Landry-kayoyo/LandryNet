@@ -1,4 +1,4 @@
-import { Router, type NextFunction, type Request, type Response } from "express";
+import { Router } from "express";
 import nodemailer from "nodemailer";
 import { createContactMessage } from "@workspace/db";
 
@@ -17,7 +17,7 @@ function createMailer() {
   });
 }
 
-router.post("/contact", async (req: Request, res: Response, next: NextFunction) => {
+router.post("/contact", async (req: any, res: any, next: any) => {
   const { nom, email, sujet, message } = req.body ?? {};
 
   if ([nom, email, sujet, message].some((value) => typeof value !== "string" || value.trim().length === 0)) {

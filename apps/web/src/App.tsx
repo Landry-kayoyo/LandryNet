@@ -488,51 +488,53 @@ function Home() {
   return (
     <div className="site">
       <header className="site-header">
-        <a href="#top" className="brand-lockup" onClick={closeMenu} data-testid="link-home">
-          <span className="brand-logo"><img src={brandLogo} alt="Logo Landry Net, Landry Kayoyo, infrastructure IT et systèmes fiables" /></span>
-          <span className="brand-wordmark">LANDRY NET</span>
-        </a>
-        <nav className="desktop-nav" aria-label="Navigation principale">
-          {navItems.map((item, index) => (
-            <a key={item.href} href={item.href} data-testid={`link-nav-${index}`}>{item.label}<sup>0{index + 1}</sup></a>
-          ))}
-        </nav>
-        <a href="#contact" className="header-contact" data-testid="link-header-contact">
-          <span>Parlons projet</span><ArrowUpRight size={16} />
-        </a>
-        <button type="button" className="menu-toggle" aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'} aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)} data-testid="button-menu">
-          {menuOpen ? <X size={20} /> : <Menu size={20} />}
-        </button>
-        <AnimatePresence>
-          {menuOpen && (
-          <motion.div
-            className="mobile-menu-backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
-            onClick={closeMenu}
-          >
-          <motion.div
-            className="mobile-menu"
-            initial={{ opacity: 0, y: -12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="mobile-menu-top"><span>Navigation</span><span>LK / 01</span></div>
-            <nav aria-label="Navigation mobile">
-              {[...navItems, { label: 'Contact', href: '#contact' }].map((item, index) => (
-                <a key={item.href} href={item.href} onClick={closeMenu} data-testid={`link-mobile-${index}`}>
-                  <span>0{index + 1}</span>{item.label}<ArrowUpRight size={18} />
-                </a>
-              ))}
-            </nav>
-          </motion.div>
-          </motion.div>
-          )}
-        </AnimatePresence>
+        <div className="site-header-inner shell">
+          <a href="#top" className="brand-lockup" onClick={closeMenu} data-testid="link-home">
+            <span className="brand-logo"><img src={brandLogo} alt="Logo Landry Net, Landry Kayoyo, infrastructure IT et systèmes fiables" /></span>
+            <span className="brand-wordmark">LANDRY NET</span>
+          </a>
+          <nav className="desktop-nav" aria-label="Navigation principale">
+            {navItems.map((item, index) => (
+              <a key={item.href} href={item.href} data-testid={`link-nav-${index}`}>{item.label}<sup>0{index + 1}</sup></a>
+            ))}
+          </nav>
+          <a href="#contact" className="header-contact" data-testid="link-header-contact">
+            <span>Parlons projet</span><ArrowUpRight size={16} />
+          </a>
+          <button type="button" className="menu-toggle" aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'} aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)} data-testid="button-menu">
+            {menuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+          <AnimatePresence>
+            {menuOpen && (
+            <motion.div
+              className="mobile-menu-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.18 }}
+              onClick={closeMenu}
+            >
+            <motion.div
+              className="mobile-menu"
+              initial={{ opacity: 0, y: -12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="mobile-menu-top"><span>Navigation</span><span>LK / 01</span></div>
+              <nav aria-label="Navigation mobile">
+                {[...navItems, { label: 'Contact', href: '#contact' }].map((item, index) => (
+                  <a key={item.href} href={item.href} onClick={closeMenu} data-testid={`link-mobile-${index}`}>
+                    <span>0{index + 1}</span>{item.label}<ArrowUpRight size={18} />
+                  </a>
+                ))}
+              </nav>
+            </motion.div>
+            </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </header>
 
       <main id="top">

@@ -1,11 +1,9 @@
 import { Router } from "express";
-import { HealthCheckResponse } from "@workspace/api-schema";
 
 const router = Router();
 
-router.get("/healthz", (_req, res) => {
-  const data = HealthCheckResponse.parse({ status: "ok" });
-  res.json(data);
+router.get("/healthz", (_req: any, res: any) => {
+  res.json({ status: "ok" });
 });
 
 export default router;
