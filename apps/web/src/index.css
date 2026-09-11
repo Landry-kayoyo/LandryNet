@@ -102,6 +102,7 @@
 /* Navigation */
 .site-header { position: fixed; z-index: 30; inset: 0 0 auto; width: 100%; height: 78px; border-bottom: 1px solid rgba(238, 239, 226, .11); background: rgba(13, 17, 24, .84); backdrop-filter: blur(18px); }
 .site-header-inner { display: flex; align-items: center; width: min(100% - 96px, 1340px); height: 78px; margin: 0 auto; }
+.site-header-inner > .menu-toggle { margin-left: auto; }
 .brand-lockup { display: flex; align-items: center; gap: 0.75rem; }
 .brand-logo { display: grid; width: 40px; height: 40px; place-items: center; overflow: hidden; background: var(--paper); }
 .brand-logo img { width: 38px; height: 38px; object-fit: cover; }
@@ -362,7 +363,8 @@
 }
 @media (max-width: 800px) {
   .desktop-nav, .header-contact { display: none; }
-  .menu-toggle { display: grid; place-items: center; }
+  .site-header-inner { position: relative; }
+  .menu-toggle { display: grid; place-items: center; margin-left: auto; }
   .mobile-menu { position: fixed; z-index: 26; top: 78px; right: 0; bottom: 0; left: auto; width: min(82vw, 360px); max-height: none; border-left: 1px solid var(--line-light); border-right: 0; box-shadow: -18px 0 48px rgba(13, 17, 24, .12); }
   .shell { width: min(100% - 40px, 1280px); }
   .hero { min-height: auto; }
@@ -410,7 +412,7 @@
   .site-header { height: 68px; padding-inline: 20px; }
   .brand-logo, .brand-logo img { width: 35px; height: 35px; }
   .mobile-menu-backdrop { top: 68px; height: calc(100dvh - 68px); }
-  .mobile-menu { top: 68px; width: min(82vw, 320px); display: flex; height: calc(100dvh - 68px); flex-direction: column; padding: 1rem 20px 2rem; }
+  .mobile-menu { top: 68px; right: 0; left: auto; width: min(82vw, 320px); display: flex; height: calc(100dvh - 68px); flex-direction: column; padding: 1rem 20px 2rem; }
   .mobile-menu nav { flex: 1; gap: .1rem; }
   .mobile-menu a { min-height: 54px; padding-block: .85rem; font-size: clamp(1.45rem, 6vw, 2rem); letter-spacing: -.06em; }
   .mobile-menu a span { font-size: .58rem; }
