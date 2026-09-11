@@ -1,8 +1,8 @@
-import { Router, type IRouter } from "express";
+import { Router } from "express";
 import nodemailer from "nodemailer";
 import { createContactMessage } from "@workspace/db";
 
-const router: IRouter = Router();
+const router = Router();
 
 function createMailer() {
   const host = process.env.SMTP_HOST;

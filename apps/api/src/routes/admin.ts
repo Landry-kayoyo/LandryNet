@@ -2,7 +2,7 @@ import { createHash, randomBytes, scrypt as scryptCallback, timingSafeEqual } fr
 import { mkdirSync, renameSync } from "node:fs";
 import { resolve } from "node:path";
 import { promisify } from "node:util";
-import { Router, type IRouter, type Request, type Response, type NextFunction } from "express";
+import { Router, type Request, type Response, type NextFunction } from "express";
 import multer from "multer";
 import {
   createAdminSession,
@@ -21,7 +21,7 @@ import {
 } from "@workspace/db";
 
 const scrypt = promisify(scryptCallback);
-const router: IRouter = Router();
+const router = Router();
 const SESSION_COOKIE = "landry_admin_session";
 const SESSION_DAYS = 7;
 const uploadDirectory = resolve(process.cwd(), "uploads");
