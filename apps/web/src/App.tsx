@@ -56,7 +56,7 @@ const navItems = [
 ];
 
 const defaultCover = `${import.meta.env.BASE_URL}default-cover.svg`;
-const siteUrl = 'https://landrynet.dev';
+const siteUrl = 'https://landrynet.vercel.app';
 const seoKeywords = [
   'Landry Kayoyo',
   'Landry Net',
@@ -697,7 +697,7 @@ function Home() {
 
         <section id="contact" className="contact-section">
           <div className="shell contact-layout">
-            <Reveal><SectionKicker index="07" dark>Contact</SectionKicker><h2>Un système<br /><em>à structurer ?</em></h2><p className="contact-copy">Décrivez le contexte, le niveau d’urgence et ce qui doit rester debout. La première réponse commence ici.</p><div className="contact-direct"><span>Écrire directement</span><a href="mailto:hello@landrynet.dev" data-testid="link-email">hello@landrynet.dev <ArrowUpRight size={15} /></a></div></Reveal>
+            <Reveal><SectionKicker index="07" dark>Contact</SectionKicker><h2>Un système<br /><em>à structurer ?</em></h2><p className="contact-copy">Décrivez le contexte, le niveau d’urgence et ce qui doit rester debout. La première réponse commence ici.</p><div className="contact-direct"><span>Écrire directement</span><a href="mailto:hello@landrynet.vercel.app" data-testid="link-email">hello@landrynet.vercel.app <ArrowUpRight size={15} /></a></div></Reveal>
             <Reveal delay={0.12}>
               {status === 'success' ? (
                 <div className="contact-success" role="status" aria-live="polite" data-testid="status-contact-success"><CheckCircle2 size={26} /><span>Message enregistré</span><h3>Le contexte est posé.</h3><p>Votre brouillon est conservé sur cet appareil. Merci pour la clarté — c’est déjà un bon début de projet.</p><button type="button" className="button button-outline" onClick={resetForm} data-testid="button-reset-contact">Écrire un autre message <ArrowUpRight size={16} /></button></div>
