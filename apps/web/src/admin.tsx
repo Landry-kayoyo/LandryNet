@@ -2,7 +2,7 @@ import { useEffect, useState, type Dispatch, type FormEvent, type SetStateAction
 import { BarChart3, FileText, FolderKanban, LayoutDashboard, LogOut, Mail, Menu, Plus, Save, Settings, ShieldCheck, Trash2, UserRound, X } from 'lucide-react';
 import './admin.css';
 
-const API = import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api';
+const API = import.meta.env.VITE_API_URL ?? (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000/api' : '/api');
 type ContentType = 'skill' | 'technology' | 'project' | 'timeline' | 'social';
 type Item = { id: number; type: ContentType; title: string; data: Record<string, unknown>; published: boolean; visible: boolean; sortOrder: number };
 type EvolutionPoint = { date: string; label: string; contents: number; messages: number };

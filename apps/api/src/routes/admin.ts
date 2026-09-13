@@ -1,9 +1,10 @@
 import { createHash, randomBytes, scrypt as scryptCallback, timingSafeEqual } from "node:crypto";
-import { mkdirSync, renameSync } from "node:fs";
+import { mkdirSync, renameSync, unlinkSync } from "node:fs";
 import { resolve } from "node:path";
 import { promisify } from "node:util";
 import { Router } from "express";
 import multer from "multer";
+import sharp from "sharp";
 import {
   createAdminSession,
   createAdminUser,
@@ -112,17 +113,28 @@ router.post("/logout", async (req: any, res: any, next: any) => {
 
 router.get("/session", requireAdmin, (_req: any, res: any) => res.json({ authenticated: true }));
 
-router.post("/upload", requireAdmin, upload.single("file"), (req: any, res: any) => {
+router.post("/upload", requireAdmin, upload.single("file"), async (req: any, res: any, next: any) => {
   if (!req.file) {
     res.status(400).json({ error: "Une image valide est requise." });
     return;
   }
-  const extension = req.file.mimetype.split("/")[1]?.replace("jpeg", "jpg") ?? "bin";
-  const filename = `${req.file.filename}.${extension}`;
-  const currentPath = resolve(uploadDirectory, req.file.filename);
-  const finalPath = resolve(uploadDirectory, filename);
-  renameSync(currentPath, finalPath);
-  res.status(201).json({ url: `${req.protocol}://${req.get("host")}/api/uploads/${filename}` });
+
+  try {
+    const originalPath = resolve(uploadDirectory, req.file.filename);
+    const optimizedName = `${req.file.filename}.webp`;
+    const optimizedPath = resolve(uploadDirectory, optimizedName);
+
+    await sharp(originalPath)
+      .resize({ width: 1800, height: 1800, fit: "inside", withoutEnlargement: true })
+      .webp({ quality: 74, effort: 6 })
+      .toFile(optimizedPath);
+
+    unlinkSync(originalPath);
+
+    res.status(201).json({ url: `${req.protocol}://${req.get("host")}/api/uploads/${optimizedName}` });
+  } catch (error) {
+    next(error);
+  }
 });
 
 router.get("/dashboard", requireAdmin, async (_req: any, res: any, next: any) => {

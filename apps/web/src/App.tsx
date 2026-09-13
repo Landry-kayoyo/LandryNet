@@ -27,16 +27,16 @@ import {
   X,
 } from 'lucide-react';
 import { Route, Switch, Router as WouterRouter, useRoute } from 'wouter';
-import brandLogo from '@assets/brand-logo.png';
-import presentationImage from '@assets/hero-presentation.jpeg';
-import profileImage from '@assets/profile-portrait.jpeg';
-import diplomaImage from '@assets/diploma-ceremony.jpeg';
-import field01PresentationImage from '@assets/field-01-presentation.jpeg';
-import field02MethodImage from '@assets/field-02-method.jpeg';
-import field03HandshakeImage from '@assets/field-03-handshake.jpeg';
-import seatedPresentationImage from '@assets/field-transmission.jpeg';
-import writingPresentationImage from '@assets/field-method.jpeg';
-import handshakeImage from '@assets/field-handshake.jpeg';
+import brandLogo from '@assets/optimized/brand-logo.webp';
+import presentationImage from '@assets/optimized/hero-presentation.webp';
+import profileImage from '@assets/optimized/profile-portrait.webp';
+import diplomaImage from '@assets/optimized/diploma-ceremony.webp';
+import field01PresentationImage from '@assets/optimized/field-01-presentation.webp';
+import field02MethodImage from '@assets/optimized/field-02-method.webp';
+import field03HandshakeImage from '@assets/optimized/field-03-handshake.webp';
+import seatedPresentationImage from '@assets/optimized/field-transmission.webp';
+import writingPresentationImage from '@assets/optimized/field-method.webp';
+import handshakeImage from '@assets/optimized/field-handshake.webp';
 
 const queryClient = new QueryClient();
 
@@ -57,6 +57,12 @@ const navItems = [
 
 const defaultCover = `${import.meta.env.BASE_URL}default-cover.svg`;
 const siteUrl = 'https://landrynet.vercel.app';
+const apiBaseUrl = import.meta.env.VITE_API_URL ?? (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000/api' : '/api');
+
+function resolveAbsoluteImageUrl(image: string) {
+  return new URL(image, siteUrl).toString();
+}
+
 const seoKeywords = [
   'Landry Kayoyo',
   'Landry Net',
@@ -91,11 +97,12 @@ function setMetaTag(selector: string, attributes: Record<string, string>, conten
   }
 }
 
-function useSeoMeta({ title, description, path = '/', image = '/default-cover.svg', structuredData }: SeoConfig) {
+function useSeoMeta({ title, description, path = '/', image = defaultCover, structuredData }: SeoConfig) {
   useEffect(() => {
     const canonicalPath = path.startsWith('/') ? path : `/${path}`;
     const canonicalUrl = `${siteUrl}${canonicalPath}`;
     const fullTitle = `${title} | Landry Net`;
+    const resolvedImage = resolveAbsoluteImageUrl(image);
 
     document.title = fullTitle;
     setMetaTag('meta[name="keywords"]', { name: 'keywords' }, seoKeywords);
@@ -104,11 +111,14 @@ function useSeoMeta({ title, description, path = '/', image = '/default-cover.sv
     setMetaTag('meta[property="og:description"]', { property: 'og:description' }, description);
     setMetaTag('meta[property="og:type"]', { property: 'og:type' }, 'website');
     setMetaTag('meta[property="og:url"]', { property: 'og:url' }, canonicalUrl);
-    setMetaTag('meta[property="og:image"]', { property: 'og:image' }, `${siteUrl}${image}`);
+    setMetaTag('meta[property="og:image"]', { property: 'og:image' }, resolvedImage);
+    setMetaTag('meta[property="og:image:alt"]', { property: 'og:image:alt' }, fullTitle);
+    setMetaTag('meta[property="og:site_name"]', { property: 'og:site_name' }, 'Landry Net');
     setMetaTag('meta[name="twitter:card"]', { name: 'twitter:card' }, 'summary_large_image');
     setMetaTag('meta[name="twitter:title"]', { name: 'twitter:title' }, fullTitle);
     setMetaTag('meta[name="twitter:description"]', { name: 'twitter:description' }, description);
-    setMetaTag('meta[name="twitter:image"]', { name: 'twitter:image' }, `${siteUrl}${image}`);
+    setMetaTag('meta[name="twitter:image"]', { name: 'twitter:image' }, resolvedImage);
+    setMetaTag('meta[name="twitter:image:alt"]', { name: 'twitter:image:alt' }, fullTitle);
     setMetaTag('meta[name="robots"]', { name: 'robots' }, 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1');
 
     const canonicalLink = document.head.querySelector('link[rel="canonical"]') as HTMLLinkElement | null ?? document.createElement('link');
@@ -135,7 +145,7 @@ function usePublicCmsData() {
   const [data, setData] = useState<PublicCmsData>({ skills: [], technologies: [], projects: [], timeline: [], socials: [] });
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api'}/content`)
+    fetch(`${apiBaseUrl}/content`)
       .then((response) => response.ok ? response.json() : null)
       .then((nextData: PublicCmsData | null) => {
         if (nextData) setData(nextData);
@@ -373,7 +383,7 @@ function Home() {
     title: 'Landry Kayoyo | Administrateur systèmes et réseaux',
     description: 'Landry Kayoyo, administrateur systèmes et réseaux, accompagne les entreprises dans l’infrastructure IT, la sécurité et le monitoring à Lubumbashi.',
     path: '/',
-    image: '/default-cover.svg',
+    image: defaultCover,
     structuredData: [
       {
         '@context': 'https://schema.org',
@@ -459,7 +469,7 @@ function Home() {
     }
     setStatus('loading');
     try {
-      const apiUrl = `${import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api'}/contact`;
+      const apiUrl = `${apiBaseUrl}/contact`;
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -737,17 +747,20 @@ function Home() {
 
 function PublicationPage() {
   const [, params] = useRoute('/publication/:id');
+  const [project, setProject] = useState<PublicCmsItem | null>(null);
+  const [loading, setLoading] = useState(true);
+
   useSeoMeta({
     title: params?.id ? `Publication ${params.id}` : 'Publication',
     description: 'Consultez les projets et réalisations de Landry Kayoyo dans les domaines des systèmes, réseaux et infrastructure.',
     path: params?.id ? `/publication/${params.id}` : '/publication',
-    image: '/default-cover.svg',
+    image: project?.data.coverImage && typeof project.data.coverImage === 'string'
+      ? project.data.coverImage
+      : defaultCover,
   });
-  const [project, setProject] = useState<PublicCmsItem | null>(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api'}/content`)
+    fetch(`${apiBaseUrl}/content`)
       .then((response) => response.ok ? response.json() : null)
       .then((data: PublicCmsData | null) => {
         const match = data?.projects.find((item) => String(item.id) === params?.id);
@@ -778,7 +791,7 @@ function AboutPage() {
     title: 'À propos | Landry Kayoyo',
     description: 'Découvrez le profil et l’approche de Landry Kayoyo en infrastructure IT, systèmes, réseaux et sécurité informatique.',
     path: '/a-propos',
-    image: '/default-cover.svg',
+    image: defaultCover,
     structuredData: {
       '@context': 'https://schema.org',
       '@type': 'ProfilePage',
@@ -845,7 +858,7 @@ function ServicesPage() {
     title: 'Services IT | Landry Net',
     description: 'Services d’infrastructure IT, réseaux, sécurité et monitoring pour des environnements professionnels fiables.',
     path: '/services',
-    image: '/default-cover.svg',
+    image: defaultCover,
   });
 
   const services = [
@@ -880,7 +893,7 @@ function ProjectsPage() {
     title: 'Projets | Landry Net',
     description: 'Consultez les projets et réalisations de Landry Kayoyo en infrastructure IT, réseaux et sécurité informatique.',
     path: '/projets',
-    image: '/default-cover.svg',
+    image: defaultCover,
   });
   return <main className="collection-page"><header className="collection-header"><a className="publication-back" href="/#publications"><ArrowDownRight size={16} /> Retour au portfolio</a><span>LANDRY NET</span></header><section className="collection-hero collection-hero-projects"><SectionKicker index="03">Publications</SectionKicker><h1>Tous les projets<br /><em>en pratique.</em></h1><p>Les projets publiés depuis l’espace d’administration, présentés avec leur contexte et leurs technologies.</p></section><section className="project-list">{data.projects.length === 0 ? <p className="collection-empty">Aucun projet publié pour le moment.</p> : data.projects.map((project, index) => <a className="project-list-item" href={`/publication/${project.id}`} key={project.id}><img src={typeof project.data.coverImage === 'string' && project.data.coverImage ? project.data.coverImage : defaultCover} alt={`Projet ${project.title} de Landry Kayoyo, infrastructure IT, réseaux et systèmes`} loading="lazy" decoding="async" /><span>0{index + 1}</span><div><h2>{project.title}</h2><p>{String(project.data.description ?? '')}</p></div><ArrowUpRight size={21} /></a>)}</section></main>;
 }
