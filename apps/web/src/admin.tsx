@@ -25,7 +25,7 @@ function Login({ onLogin }: { onLogin: () => void }) {
 }
 
 function AdminApp() {
-  const [authenticated, setAuthenticated] = useState<boolean | null>(null);
+  const [authenticated, setAuthenticated] = useState(false);
   const [section, setSection] = useState<'dashboard' | 'content' | 'profile' | 'messages' | 'settings'>('dashboard');
   const [contentType, setContentType] = useState<ContentType>('project');
   const [counts, setCounts] = useState<Counts | null>(null);
@@ -40,7 +40,6 @@ function AdminApp() {
   useEffect(() => { if (authenticated && section === 'content') void request(`/admin/items?type=${contentType}`).then(setItems); }, [authenticated, section, contentType]);
   useEffect(() => { if (authenticated && section === 'messages') void request('/admin/messages').then(setMessages); }, [authenticated, section]);
 
-  if (authenticated === null) return <div className="admin-loading">Chargement de la session...</div>;
   if (!authenticated) return <Login onLogin={() => void refresh()} />;
   const logout = async () => { await request('/admin/logout', { method: 'POST' }); setAuthenticated(false); };
   const nav = (next: typeof section) => { setSection(next); setMobileOpen(false); };
