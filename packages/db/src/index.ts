@@ -1,9 +1,21 @@
 import { mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { DatabaseSync } from "node:sqlite";
 import pg from "pg";
 
-const driver = process.env.DB_DRIVER ?? (process.env.DATABASE_URL ? "postgres" : "sqlite");
+const repoRoot = resolve(fileURLToPath(new URL("../..", import.meta.url)));
+
+for (const envFile of [".env.vercel.local", ".env.production", ".env.local", ".env"]) {
+  try {
+    process.loadEnvFile(resolve(repoRoot, envFile));
+  } catch {
+    // Ignore missing env files; they are optional in production and CI.
+  }
+}
+
+const databaseUrl = process.env.POSTGRES_URL ?? process.env.DATABASE_URL ?? process.env.NEON_DATABASE_URL;
+const driver = process.env.DB_DRIVER ?? (databaseUrl ? "postgres" : "sqlite");
 
 if (driver !== "sqlite" && driver !== "postgres") {
   throw new Error(`Unsupported DB_DRIVER "${driver}". Use "sqlite" or "postgres".`);
@@ -28,12 +40,22 @@ function createSqliteDatabase() {
 }
 
 function createPostgresDatabase() {
-  if (!process.env.DATABASE_URL) {
-    throw new Error("DATABASE_URL is required when DB_DRIVER=postgres.");
+  if (!databaseUrl) {
+    throw new Error("A Postgres connection string is required when DB_DRIVER=postgres.");
   }
 
   const { Pool } = pg;
-  return new Pool({ connectionString: process.env.DATABASE_URL, max: 5 });
+  const connectionString = databaseUrl;
+  const isSslEnabled = /sslmode=|channel_binding=/.test(connectionString) || process.env.NODE_ENV === "production";
+
+  return new Pool({
+    connectionString,
+    max: 5,
+    connectionTimeoutMillis: 15000,
+    idleTimeoutMillis: 30000,
+    statement_timeout: 15000,
+    ssl: isSslEnabled ? { rejectUnauthorized: false } : undefined,
+  });
 }
 
 const sqliteDb = driver === "sqlite" ? createSqliteDatabase() : undefined;

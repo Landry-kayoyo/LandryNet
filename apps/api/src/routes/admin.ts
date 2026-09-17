@@ -9,6 +9,7 @@ import {
   createAdminSession,
   createAdminUser,
   createCmsItem,
+  db,
   deleteAdminSession,
   deleteCmsItem,
   deleteContactMessage,
@@ -73,6 +74,11 @@ function readSession(req: any) {
 async function requireAdmin(req: any, res: any, next: any) {
   const token = readSession(req);
   try {
+    if (!db) {
+      res.status(503).json({ error: "La base de données n’est pas disponible pour l’authentification." });
+      return;
+    }
+
     const session = token ? await getAdminSession(tokenHash(token)) : null;
     if (!session) {
       res.status(401).json({ error: "Authentification administrateur requise." });
@@ -81,7 +87,8 @@ async function requireAdmin(req: any, res: any, next: any) {
     res.locals.adminUserId = session.userId;
     next();
   } catch (error) {
-    next(error);
+    const message = error instanceof Error ? error.message : "Erreur inconnue";
+    res.status(503).json({ error: `Service d’authentification indisponible: ${message}` });
   }
 }
 
