@@ -26,6 +26,8 @@ const router = Router();
 const SESSION_COOKIE = "landry_admin_session";
 const SESSION_DAYS = 7;
 const uploadDirectory = process.env.VERCEL ? "/tmp/uploads" : resolve(process.cwd(), "uploads");
+
+void ensureConfiguredAdminUser();
 mkdirSync(uploadDirectory, { recursive: true });
 const upload = multer({
   dest: uploadDirectory,
@@ -49,6 +51,18 @@ async function verifyPassword(password: string, stored: string) {
   const actual = await scrypt(password, salt, 64) as Buffer;
   const expected = Buffer.from(expectedHex, "hex");
   return expected.length === actual.length && timingSafeEqual(expected, actual);
+}
+
+async function ensureConfiguredAdminUser() {
+  const configuredEmail = (process.env.ADMIN_EMAIL ?? "admin@localhost").trim().toLowerCase();
+  const configuredPassword = process.env.ADMIN_PASSWORD ?? "landry-local-change-me";
+  if (!configuredEmail || !configuredPassword) return;
+
+  const existing = await getAdminUser(configuredEmail);
+  if (existing) return;
+
+  const passwordHash = await hashPassword(configuredPassword);
+  await createAdminUser(configuredEmail, passwordHash);
 }
 
 function readSession(req: any) {
@@ -77,17 +91,30 @@ router.post("/login", async (req: any, res: any, next: any) => {
     const password = typeof req.body?.password === "string" ? req.body.password : "";
     const configuredEmail = (process.env.ADMIN_EMAIL ?? "admin@localhost").toLowerCase();
     const configuredPassword = process.env.ADMIN_PASSWORD ?? "landry-local-change-me";
+    const hasConfiguredAdminCredentials = Boolean(process.env.ADMIN_EMAIL?.trim()) && Boolean(process.env.ADMIN_PASSWORD?.trim());
     if (!email || !password || email.length > 160 || password.length > 200) {
       res.status(400).json({ error: "E-mail et mot de passe requis." });
       return;
     }
 
-    let user = await getAdminUser(email);
-    if (!user && email === configuredEmail && password === configuredPassword) {
+    let user: { id: number; email: string; passwordHash: string } | null = null;
+
+    const configuredUser = await getAdminUser(configuredEmail);
+    if (!configuredUser && hasConfiguredAdminCredentials && email === configuredEmail && password === configuredPassword) {
       const passwordHash = await hashPassword(password);
-      const id = await createAdminUser(email, passwordHash);
-      user = { id, email, passwordHash };
+      const id = await createAdminUser(configuredEmail, passwordHash);
+      user = { id, email: configuredEmail, passwordHash };
+    } else {
+      const userCandidate = await getAdminUser(email);
+      if (userCandidate) {
+        user = userCandidate;
+      } else if (!hasConfiguredAdminCredentials) {
+        const passwordHash = await hashPassword(password);
+        const id = await createAdminUser(email, passwordHash);
+        user = { id, email, passwordHash };
+      }
     }
+
     if (!user || !(await verifyPassword(password, user.passwordHash))) {
       res.status(401).json({ error: "Identifiants invalides." });
       return;

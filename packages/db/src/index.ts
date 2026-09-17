@@ -3,7 +3,7 @@ import { dirname, resolve } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import pg from "pg";
 
-const driver = process.env.DB_DRIVER ?? "sqlite";
+const driver = process.env.DB_DRIVER ?? (process.env.DATABASE_URL ? "postgres" : "sqlite");
 
 if (driver !== "sqlite" && driver !== "postgres") {
   throw new Error(`Unsupported DB_DRIVER "${driver}". Use "sqlite" or "postgres".`);
