@@ -61,14 +61,34 @@ function createPostgresDatabase() {
 const sqliteDb = driver === "sqlite" ? createSqliteDatabase() : undefined;
 const postgresDb = driver === "postgres" ? createPostgresDatabase() : undefined;
 export const db = sqliteDb ?? postgresDb!;
-const postgresReady = postgresDb ? postgresDb.query(`
-  CREATE TABLE IF NOT EXISTS admin_users (id SERIAL PRIMARY KEY, email TEXT NOT NULL UNIQUE, password_hash TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL);
-  CREATE TABLE IF NOT EXISTS admin_sessions (token_hash TEXT PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES admin_users(id) ON DELETE CASCADE, expires_at BIGINT NOT NULL, created_at TIMESTAMPTZ NOT NULL);
-  CREATE TABLE IF NOT EXISTS cms_items (id SERIAL PRIMARY KEY, type TEXT NOT NULL, title TEXT NOT NULL, data JSONB NOT NULL DEFAULT '{}'::jsonb, published BOOLEAN NOT NULL DEFAULT TRUE, visible BOOLEAN NOT NULL DEFAULT TRUE, sort_order INTEGER NOT NULL DEFAULT 0, created_at TIMESTAMPTZ NOT NULL, updated_at TIMESTAMPTZ NOT NULL);
-  CREATE TABLE IF NOT EXISTS site_profile (id INTEGER PRIMARY KEY CHECK (id = 1), data JSONB NOT NULL DEFAULT '{}'::jsonb, updated_at TIMESTAMPTZ NOT NULL);
-  CREATE TABLE IF NOT EXISTS site_settings (id INTEGER PRIMARY KEY CHECK (id = 1), data JSONB NOT NULL DEFAULT '{}'::jsonb, updated_at TIMESTAMPTZ NOT NULL);
-  CREATE TABLE IF NOT EXISTS contact_messages (id SERIAL PRIMARY KEY, name TEXT NOT NULL, email TEXT NOT NULL, subject TEXT NOT NULL, message TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL, is_read BOOLEAN NOT NULL DEFAULT FALSE);
-`).then(() => undefined) : Promise.resolve();
+
+const postgresReady = postgresDb
+  ? Promise.race([
+      (async () => {
+        try {
+          await postgresDb.query(`
+            CREATE TABLE IF NOT EXISTS admin_users (id SERIAL PRIMARY KEY, email TEXT NOT NULL UNIQUE, password_hash TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL);
+            CREATE TABLE IF NOT EXISTS admin_sessions (token_hash TEXT PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES admin_users(id) ON DELETE CASCADE, expires_at BIGINT NOT NULL, created_at TIMESTAMPTZ NOT NULL);
+            CREATE TABLE IF NOT EXISTS cms_items (id SERIAL PRIMARY KEY, type TEXT NOT NULL, title TEXT NOT NULL, data JSONB NOT NULL DEFAULT '{}'::jsonb, published BOOLEAN NOT NULL DEFAULT TRUE, visible BOOLEAN NOT NULL DEFAULT TRUE, sort_order INTEGER NOT NULL DEFAULT 0, created_at TIMESTAMPTZ NOT NULL, updated_at TIMESTAMPTZ NOT NULL);
+            CREATE TABLE IF NOT EXISTS site_profile (id INTEGER PRIMARY KEY CHECK (id = 1), data JSONB NOT NULL DEFAULT '{}'::jsonb, updated_at TIMESTAMPTZ NOT NULL);
+            CREATE TABLE IF NOT EXISTS site_settings (id INTEGER PRIMARY KEY CHECK (id = 1), data JSONB NOT NULL DEFAULT '{}'::jsonb, updated_at TIMESTAMPTZ NOT NULL);
+            CREATE TABLE IF NOT EXISTS contact_messages (id SERIAL PRIMARY KEY, name TEXT NOT NULL, email TEXT NOT NULL, subject TEXT NOT NULL, message TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL, is_read BOOLEAN NOT NULL DEFAULT FALSE);
+          `);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          throw new Error(`Postgres init failed: ${message}`);
+        }
+      })(),
+      new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error("Postgres init timed out after 8s.")), 8000);
+      }),
+    ])
+      .catch((error) => {
+        const message = error instanceof Error ? error.message : String(error);
+        console.warn("Postgres init skipped:", message);
+        return undefined;
+      })
+  : Promise.resolve();
 
 export type CmsContentType = "skill" | "technology" | "project" | "timeline" | "social";
 

@@ -94,6 +94,11 @@ async function requireAdmin(req: any, res: any, next: any) {
 
 router.post("/login", async (req: any, res: any, next: any) => {
   try {
+    if (!db) {
+      res.status(503).json({ error: "La base de données n’est pas disponible pour l’authentification." });
+      return;
+    }
+
     const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
     const password = typeof req.body?.password === "string" ? req.body.password : "";
     const configuredEmail = (process.env.ADMIN_EMAIL ?? "admin@localhost").toLowerCase();
