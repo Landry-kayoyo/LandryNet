@@ -74,6 +74,11 @@ const postgresReady = postgresDb
             CREATE TABLE IF NOT EXISTS site_settings (id INTEGER PRIMARY KEY CHECK (id = 1), data JSONB NOT NULL DEFAULT '{}'::jsonb, updated_at TIMESTAMPTZ NOT NULL);
             CREATE TABLE IF NOT EXISTS contact_messages (id SERIAL PRIMARY KEY, name TEXT NOT NULL, email TEXT NOT NULL, subject TEXT NOT NULL, message TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL, is_read BOOLEAN NOT NULL DEFAULT FALSE);
           `);
+          await postgresDb.query(`
+            ALTER TABLE IF EXISTS admin_sessions
+              ALTER COLUMN expires_at TYPE BIGINT
+              USING expires_at::BIGINT;
+          `);
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error);
           throw new Error(`Postgres init failed: ${message}`);

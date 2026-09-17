@@ -1,4 +1,4 @@
-import { boolean, integer, jsonb, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { bigint, boolean, integer, jsonb, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
 
 export const adminUsersTable = pgTable("admin_users", {
   id: serial("id").primaryKey(),
@@ -10,7 +10,7 @@ export const adminUsersTable = pgTable("admin_users", {
 export const adminSessionsTable = pgTable("admin_sessions", {
   tokenHash: text("token_hash").primaryKey(),
   userId: integer("user_id").notNull(),
-  expiresAt: integer("expires_at").notNull(),
+  expiresAt: bigint("expires_at", { mode: "number" }).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
 });
 
