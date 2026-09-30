@@ -1,29 +1,24 @@
 
-<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
-  <!-- Page d'accueil -->
   <url>
     <loc>https://landrynet.vercel.app/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
 
-  <!-- À propos -->
   <url>
     <loc>https://landrynet.vercel.app/a-propos</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
-  <!-- Services -->
   <url>
     <loc>https://landrynet.vercel.app/services</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
-  <!-- Liste des projets -->
   <url>
     <loc>https://landrynet.vercel.app/projets</loc>
     <changefreq>weekly</changefreq>
@@ -31,4 +26,3 @@
   </url>
 
 </urlset>
-
