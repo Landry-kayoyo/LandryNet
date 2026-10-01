@@ -38,6 +38,12 @@ export const siteSettingsTable = pgTable("site_settings", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
 });
 
+export const adminSettingsTable = pgTable("admin_settings", {
+  id: integer("id").primaryKey(),
+  data: jsonb("data").notNull().default({}),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
+});
+
 export const postgresContactMessagesTable = pgTable("contact_messages", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),

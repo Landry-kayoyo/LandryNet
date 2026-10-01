@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import {
   BarChart3,
+  Bot,
   Briefcase,
   FileText,
   FolderKanban,
@@ -16,9 +17,11 @@ import {
   Menu,
   Plus,
   Save,
+  SendHorizontal,
   Settings,
   Share2,
   ShieldCheck,
+  Sparkles,
   Trash2,
   UserRound,
   X,
@@ -150,11 +153,63 @@ function Login({ onLogin }: { onLogin: () => void }) {
   );
 }
 
+function AiChatBubble({ setNotice }: { setNotice: (msg: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [input, setInput] = useState("");
+  const [messages, setMessages] = useState<{role: "user" | "assistant", text: string}[]>([
+    { role: "assistant", text: "Bonjour ! Je suis ton assistant IA. Comment puis-je t'aider aujourd'hui ?" }
+  ]);
+
+  const sendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim()) return;
+    setMessages(prev => [...prev, { role: "user", text: input }]);
+    setInput("");
+    
+    // Placeholder response
+    setTimeout(() => {
+      setMessages(prev => [...prev, { role: "assistant", text: "Le module de chat IA n'est pas encore connecté à l'API. Cette fonctionnalité arrive bientôt !" }]);
+    }, 600);
+  };
+
+  return (
+    <div className="ai-chat-container">
+      {open && (
+        <div className="ai-chat-window">
+          <div className="ai-chat-header">
+            <h3>Assistant IA</h3>
+            <button className="icon-button" onClick={() => setOpen(false)} aria-label="Fermer"><X size={18} /></button>
+          </div>
+          <div className="ai-chat-messages">
+            {messages.map((msg, i) => (
+              <div key={i} className={`ai-msg ${msg.role}`}>
+                {msg.text}
+              </div>
+            ))}
+          </div>
+          <form className="ai-chat-input-area" onSubmit={sendMessage}>
+            <input 
+              type="text" 
+              placeholder="Demande quelque chose à l'IA..." 
+              value={input} 
+              onChange={e => setInput(e.target.value)}
+            />
+            <button type="submit" aria-label="Envoyer"><SendHorizontal size={18} /></button>
+          </form>
+        </div>
+      )}
+      <button className="ai-chat-fab" onClick={() => setOpen(!open)} aria-label="Ouvrir le chat">
+        <Bot size={24} />
+      </button>
+    </div>
+  );
+}
+
 function AdminApp() {
   const [authenticated, setAuthenticated] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [section, setSection] = useState<
-    "dashboard" | "content" | "profile" | "messages" | "settings"
+    "dashboard" | "content" | "profile" | "messages" | "settings" | "ai-settings"
   >("dashboard");
   const [contentType, setContentType] = useState<ContentType>("project");
   const [counts, setCounts] = useState<Counts | null>(null);
@@ -221,6 +276,7 @@ function AdminApp() {
   };
   return (
     <div className="admin-app">
+      <AiChatBubble setNotice={setNotice} />
       {/* Overlay mobile pour fermer la sidebar en cliquant à côté */}
       {mobileOpen && (
         <div
@@ -279,6 +335,12 @@ function AdminApp() {
           >
             <Settings size={17} /> Paramètres
           </button>
+          <button
+            className={section === "ai-settings" ? "is-active" : ""}
+            onClick={() => nav("ai-settings")}
+          >
+            <Sparkles size={17} /> Paramètres IA
+          </button>
         </nav>
         <button className="admin-logout" onClick={logout}>
           <LogOut size={17} /> Déconnexion
@@ -304,7 +366,9 @@ function AdminApp() {
                     ? "Boîte de réception"
                     : section === "profile"
                       ? "Profil public"
-                      : "Paramètres du site"}
+                      : section === "settings"
+                        ? "Paramètres du site"
+                        : "Paramètres IA"}
             </h2>
           </div>
           <a href="/" target="_blank" rel="noreferrer" className="view-site">
@@ -345,6 +409,13 @@ function AdminApp() {
           <SingletonEditor
             endpoint="settings"
             title="Réglages publics et SEO"
+            setNotice={setNotice}
+          />
+        )}
+        {section === "ai-settings" && (
+          <SingletonEditor
+            endpoint="ai-settings"
+            title="Configuration de l'Assistant IA"
             setNotice={setNotice}
           />
         )}
@@ -1222,7 +1293,7 @@ function SingletonEditor({
   title,
   setNotice,
 }: {
-  endpoint: "profile" | "settings";
+  endpoint: "profile" | "settings" | "ai-settings";
   title: string;
   setNotice: (notice: string) => void;
 }) {

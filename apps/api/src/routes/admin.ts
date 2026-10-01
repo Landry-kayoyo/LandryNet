@@ -336,11 +336,14 @@ router.delete("/items/:id", requireAdmin, async (req: any, res: any, next: any) 
  } catch (error) { next(error); }
 });
 
-router.get("/profile", requireAdmin, async (_req: any, res: any, next: any) => { try { const row = await getSingleton("site_profile"); res.json(row?.data ?? {}); } catch (error) { next(error); } });
+router.get("/profile", requireAdmin, async (_req: any, res: any, next: any) => { try { const row = await getSingleton("site_profile"); res.json(row); } catch (error) { next(error); } });
 router.put("/profile", requireAdmin, async (req: any, res: any, next: any) => { try { await updateSingleton("site_profile", req.body ?? {}); res.json({ status: "updated" }); } catch (error) { next(error); } });
 
-router.get("/settings", requireAdmin, async (_req: any, res: any, next: any) => { try { const row = await getSingleton("site_settings"); res.json(row?.data ?? {}); } catch (error) { next(error); } });
+router.get("/settings", requireAdmin, async (_req: any, res: any, next: any) => { try { const row = await getSingleton("site_settings"); res.json(row); } catch (error) { next(error); } });
 router.put("/settings", requireAdmin, async (req: any, res: any, next: any) => { try { await updateSingleton("site_settings", req.body ?? {}); res.json({ status: "updated" }); } catch (error) { next(error); } });
+
+router.get("/ai-settings", requireAdmin, async (_req: any, res: any, next: any) => { try { const row = await getSingleton("admin_settings"); res.json(row); } catch (error) { next(error); } });
+router.put("/ai-settings", requireAdmin, async (req: any, res: any, next: any) => { try { await updateSingleton("admin_settings", req.body ?? {}); res.json({ status: "updated" }); } catch (error) { next(error); } });
 
 router.get("/messages", requireAdmin, async (req: any, res: any, next: any) => {
  try {
