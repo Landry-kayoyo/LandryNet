@@ -245,6 +245,7 @@ router.get("/dashboard", requireAdmin, async (_req: any, res: any, next: any) =>
       skills: items.filter((item) => item.type === "skill").length,
       technologies: items.filter((item) => item.type === "technology").length,
       timeline: items.filter((item) => item.type === "timeline").length,
+      socials: items.filter((item) => item.type === "social").length,
       messages: messages.length,
       unreadMessages: messages.filter((message) => !message.is_read).length,
       evolution,

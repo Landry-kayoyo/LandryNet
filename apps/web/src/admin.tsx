@@ -16,6 +16,7 @@ import {
   Plus,
   Save,
   Settings,
+  Share2,
   ShieldCheck,
   Trash2,
   UserRound,
@@ -51,6 +52,7 @@ type Counts = {
   skills: number;
   technologies: number;
   timeline: number;
+  socials: number;
   messages: number;
   unreadMessages: number;
   evolution?: EvolutionPoint[];
@@ -182,6 +184,11 @@ function AdminApp() {
     if (authenticated && section === "messages")
       void request("/admin/messages").then(setMessages);
   }, [authenticated, section]);
+  useEffect(() => {
+    if (!notice) return;
+    const timer = setTimeout(() => setNotice(""), 3500);
+    return () => clearTimeout(timer);
+  }, [notice]);
 
   if (checkingAuth) {
     return (
@@ -463,18 +470,20 @@ function Dashboard({
   counts: Counts | null;
   onMessages: () => void;
 }) {
-  const total = (counts?.projects ?? 0) + (counts?.skills ?? 0) + (counts?.technologies ?? 0) + (counts?.timeline ?? 0);
+  const total = (counts?.projects ?? 0) + (counts?.skills ?? 0) + (counts?.technologies ?? 0) + (counts?.timeline ?? 0) + (counts?.socials ?? 0);
   const donutData = [
     { label: "Projets",       value: counts?.projects ?? 0,     color: "#818cf8" },
-    { label: "Compétences",   value: counts?.skills ?? 0,       color: "#38bdf8" },
-    { label: "Technologies",  value: counts?.technologies ?? 0, color: "#a78bfa" },
+    { label: "Comp.",         value: counts?.skills ?? 0,       color: "#38bdf8" },
+    { label: "Technos",       value: counts?.technologies ?? 0, color: "#a78bfa" },
     { label: "Parcours",      value: counts?.timeline ?? 0,     color: "#34d399" },
+    { label: "Réseaux",       value: counts?.socials ?? 0,      color: "#f472b6" },
   ];
   const cards = [
     ["Projets",      counts?.projects ?? 0,      FolderKanban, "#818cf8"],
     ["Compétences",  counts?.skills ?? 0,        BarChart3,    "#38bdf8"],
     ["Technologies", counts?.technologies ?? 0,  FileText,     "#a78bfa"],
     ["Parcours",     counts?.timeline ?? 0,      UserRound,    "#34d399"],
+    ["Réseaux",      counts?.socials ?? 0,       Share2,       "#f472b6"],
     ["Messages",     counts?.messages ?? 0,      Mail,         "#f59e0b"],
     ["Non lus",      counts?.unreadMessages ?? 0, Mail,        "#f87171"],
   ] as const;
@@ -881,6 +890,7 @@ function SingletonEditor({
 }) {
   const [data, setData] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
+  const [newKey, setNewKey] = useState("");
 
   useEffect(() => {
     setLoading(true);
@@ -915,9 +925,10 @@ function SingletonEditor({
   };
 
   const addField = () => {
-    const key = prompt("Nom du nouveau champ (ex: bio, title) :");
-    if (key && !data[key]) {
+    const key = newKey.trim();
+    if (key && data[key] === undefined) {
       setData((prev) => ({ ...prev, [key]: "" }));
+      setNewKey("");
     }
   };
 
@@ -939,7 +950,6 @@ function SingletonEditor({
             <span className="admin-eyebrow">Source publique</span>
             <h3>{title}</h3>
           </div>
-          <button className="text-button" onClick={addField}>+ Ajouter un champ</button>
         </div>
         <p>Ces données seront disponibles pour le portfolio public.</p>
         
@@ -981,6 +991,21 @@ function SingletonEditor({
               Aucun champ défini. Ajoutez-en un pour commencer.
             </div>
           )}
+        </div>
+        
+        {/* Ajout d'un nouveau champ */}
+        <div style={{ display: "flex", gap: "10px", marginTop: "24px", paddingTop: "16px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+          <input
+            type="text"
+            placeholder="Nouveau champ (ex: bio)"
+            value={newKey}
+            onChange={(e) => setNewKey(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && addField()}
+            style={{ flex: 1, padding: "8px 12px", background: "rgba(0,0,0,0.3)", border: "1px solid var(--admin-line)", color: "white", borderRadius: "8px" }}
+          />
+          <button className="admin-button admin-button-light" onClick={addField} style={{ padding: "8px 16px" }}>
+            <Plus size={16} /> Ajouter
+          </button>
         </div>
         
         <button className="admin-button" onClick={() => void save()} style={{ marginTop: "20px", alignSelf: "flex-start" }}>
