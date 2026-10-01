@@ -19,7 +19,7 @@ router.post("/chat", requireAdmin, async (req: any, res: any, next: any) => {
     const settings = await getSingleton("admin_settings");
     
     // Default model/provider resolution
-    const providerStr = String(settings.active_model || "gemini-2.5-flash").toLowerCase();
+    const providerStr = String(settings.active_model || "gemini-2.0-flash").toLowerCase();
     
     let aiModel;
     if (providerStr.includes("gemini")) {
@@ -83,7 +83,7 @@ router.post("/chat", requireAdmin, async (req: any, res: any, next: any) => {
       steps // Send steps if we want to show tools calls in UI
     });
   } catch (err: any) {
-    next(err);
+    res.status(500).json({ error: err.message || "Erreur inconnue de l'IA" });
   }
 });
 
