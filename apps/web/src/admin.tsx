@@ -1455,18 +1455,26 @@ function AiSettingsEditor({ setNotice }: { setNotice: (msg: string) => void }) {
         <div style={{ display: "grid", gap: "20px", marginTop: "24px" }}>
           <label>
             Modèle IA actif
-            <select
+            <small style={{ display: 'block', color: 'var(--admin-muted)', marginTop: 4 }}>
+              Tu peux choisir dans la liste ou taper le nom exact du modèle.
+            </small>
+            <input
+              list="model-suggestions"
               value={activeModelStr}
               onChange={e => setData({ ...data, active_model: e.target.value })}
-              style={{ width: "100%", padding: "10px", marginTop: "6px", background: "rgba(0,0,0,0.2)", border: "1px solid var(--admin-line)", color: "white", borderRadius: "8px", fontFamily: "inherit" }}
-            >
-              <option value="gemini-3.8-flash">Google Gemini 3.8 Flash (Gratuit / Rapide)</option>
-              <option value="gemini-3.8-pro">Google Gemini 3.8 Pro (Puissant)</option>
-              <option value="deepseek-chat">DeepSeek Chat (Alternative ChatGPT)</option>
-              <option value="deepseek-reasoner">DeepSeek Reasoner (Complexe)</option>
-              <option value="gpt-4o-mini">OpenAI GPT-4o Mini</option>
-              <option value="gpt-4o">OpenAI GPT-4o</option>
-            </select>
+              placeholder="ex: gemini-3.8-flash"
+              style={{ width: "100%", padding: "10px", marginTop: "6px", background: "rgba(0,0,0,0.2)", border: "1px solid var(--admin-line)", color: "white", borderRadius: "8px", fontFamily: "monospace" }}
+            />
+            <datalist id="model-suggestions">
+              <option value="gemini-3.8-flash" label="Google Gemini 3.8 Flash (Gratuit)" />
+              <option value="gemini-3.8-pro" label="Google Gemini 3.8 Pro" />
+              <option value="gemini-2.5-flash" label="Google Gemini 2.5 Flash" />
+              <option value="gemini-1.5-pro" label="Google Gemini 1.5 Pro" />
+              <option value="deepseek-chat" label="DeepSeek Chat" />
+              <option value="deepseek-reasoner" label="DeepSeek Reasoner" />
+              <option value="gpt-4o-mini" label="OpenAI GPT-4o Mini" />
+              <option value="gpt-4o" label="OpenAI GPT-4o" />
+            </datalist>
           </label>
 
           {activeModelStr.includes("gemini") && (
