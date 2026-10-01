@@ -10,9 +10,12 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@ai-sdk/google": "^4.0.86",
+    "@ai-sdk/openai": "^4.0.82",
     "@types/multer": "^2.2.0",
     "@workspace/api-schema": "workspace:*",
     "@workspace/db": "workspace:*",
+    "ai": "^7.0.123",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "drizzle-orm": "catalog:",

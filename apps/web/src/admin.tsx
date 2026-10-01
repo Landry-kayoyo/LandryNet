@@ -153,23 +153,61 @@ function Login({ onLogin }: { onLogin: () => void }) {
   );
 }
 
+type ChatMessage = { role: "user" | "assistant"; text: string; isError?: boolean };
+
 function AiChatBubble({ setNotice }: { setNotice: (msg: string) => void }) {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<{role: "user" | "assistant", text: string}[]>([
-    { role: "assistant", text: "Bonjour ! Je suis ton assistant IA. Comment puis-je t'aider aujourd'hui ?" }
+  const [thinking, setThinking] = useState(false);
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    { role: "assistant", text: "Bonjour 👋 Je suis ton assistant IA intégré. Je connais tout ton portfolio et je peux créer ou améliorer ton contenu. Que veux-tu faire ?" }
   ]);
+  const endRef = React.useRef<HTMLDivElement>(null);
 
-  const sendMessage = (e: React.FormEvent) => {
+  // Auto-scroll to bottom when messages change
+  React.useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, thinking]);
+
+  const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim()) return;
-    setMessages(prev => [...prev, { role: "user", text: input }]);
+    const text = input.trim();
+    if (!text || thinking) return;
+
+    const newMsg: ChatMessage = { role: "user", text };
+    setMessages(prev => [...prev, newMsg]);
     setInput("");
-    
-    // Placeholder response
-    setTimeout(() => {
-      setMessages(prev => [...prev, { role: "assistant", text: "Le module de chat IA n'est pas encore connecté à l'API. Cette fonctionnalité arrive bientôt !" }]);
-    }, 600);
+    setThinking(true);
+
+    try {
+      // Build messages array in AI SDK format (exclude error messages)
+      const history = [...messages, newMsg]
+        .filter(m => !m.isError)
+        .map(m => ({ role: m.role, content: m.text }));
+
+      const response = await request("/admin/chat", {
+        method: "POST",
+        body: JSON.stringify({ messages: history }),
+      });
+
+      setMessages(prev => [...prev, {
+        role: "assistant",
+        text: response?.message?.text || "Réponse vide reçue.",
+      }]);
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : "Erreur de connexion.";
+      setMessages(prev => [...prev, {
+        role: "assistant",
+        text: `❌ ${errMsg}`,
+        isError: true,
+      }]);
+    } finally {
+      setThinking(false);
+    }
+  };
+
+  const clearChat = () => {
+    setMessages([{ role: "assistant", text: "Nouvelle conversation. Comment puis-je t'aider ?" }]);
   };
 
   return (
@@ -177,29 +215,55 @@ function AiChatBubble({ setNotice }: { setNotice: (msg: string) => void }) {
       {open && (
         <div className="ai-chat-window">
           <div className="ai-chat-header">
-            <h3>Assistant IA</h3>
-            <button className="icon-button" onClick={() => setOpen(false)} aria-label="Fermer"><X size={18} /></button>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <Sparkles size={16} style={{ color: "var(--admin-lime)" }} />
+              <h3>Assistant IA</h3>
+            </div>
+            <div style={{ display: "flex", gap: 6 }}>
+              <button className="icon-button" onClick={clearChat} title="Nouvelle conversation" aria-label="Effacer">
+                <Plus size={16} />
+              </button>
+              <button className="icon-button" onClick={() => setOpen(false)} aria-label="Fermer">
+                <X size={16} />
+              </button>
+            </div>
           </div>
           <div className="ai-chat-messages">
             {messages.map((msg, i) => (
-              <div key={i} className={`ai-msg ${msg.role}`}>
+              <div key={i} className={`ai-msg ${msg.role}${msg.isError ? " error" : ""}`}>
                 {msg.text}
               </div>
             ))}
+            {thinking && (
+              <div className="ai-msg assistant" style={{ display: "flex", gap: 5, alignItems: "center", opacity: 0.7 }}>
+                <span className="login-status-dot" style={{ width: 8, height: 8, animationDuration: "1s" }} />
+                <span className="login-status-dot" style={{ width: 8, height: 8, animationDuration: "1.2s", animationDelay: "0.2s" }} />
+                <span className="login-status-dot" style={{ width: 8, height: 8, animationDuration: "1s", animationDelay: "0.4s" }} />
+              </div>
+            )}
+            <div ref={endRef} />
           </div>
-          <form className="ai-chat-input-area" onSubmit={sendMessage}>
-            <input 
-              type="text" 
-              placeholder="Demande quelque chose à l'IA..." 
-              value={input} 
+          <form className="ai-chat-input-area" onSubmit={e => void sendMessage(e)}>
+            <input
+              type="text"
+              placeholder="Ex: Crée un projet React avec description SEO..."
+              value={input}
               onChange={e => setInput(e.target.value)}
+              disabled={thinking}
             />
-            <button type="submit" aria-label="Envoyer"><SendHorizontal size={18} /></button>
+            <button type="submit" aria-label="Envoyer" disabled={thinking || !input.trim()}>
+              <SendHorizontal size={18} />
+            </button>
           </form>
         </div>
       )}
-      <button className="ai-chat-fab" onClick={() => setOpen(!open)} aria-label="Ouvrir le chat">
-        <Bot size={24} />
+      <button
+        className="ai-chat-fab"
+        onClick={() => setOpen(!open)}
+        aria-label="Ouvrir l'assistant IA"
+        title="Assistant IA"
+      >
+        {open ? <X size={22} /> : <Bot size={22} />}
       </button>
     </div>
   );
