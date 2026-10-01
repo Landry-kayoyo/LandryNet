@@ -291,36 +291,26 @@ export function AboutPage() {
 // ServicesPage
 // ---------------------------------------------------------------------------
 export function ServicesPage() {
+  const data = usePublicCmsData();
+
   useSeoMeta({
     title: 'Services IT | Landry Net',
     description:
-      "Services d\u2019infrastructure IT, réseaux, sécurité et monitoring pour des environnements professionnels fiables.",
+      "Services d'infrastructure IT, réseaux, sécurité et monitoring pour des environnements professionnels fiables.",
     path: '/services',
     image: defaultCover,
   });
 
-  const services = [
-    {
-      title: 'Infrastructure IT',
-      description:
-        "Conception, maintenance et optimisation d\u2019une infrastructure IT fiable pour les entreprises, avec administration système, haute disponibilité et gestion des services critiques.",
+  const serviceGroups = data.services.reduce<{ label: string; items: PublicCmsItem[] }[]>(
+    (result, item) => {
+      const label = String(item.data.category ?? 'Services');
+      const group = result.find((c) => c.label === label);
+      if (group) group.items.push(item);
+      else result.push({ label, items: [item] });
+      return result;
     },
-    {
-      title: 'Réseaux et sécurité',
-      description:
-        'Mise en place de réseaux sécurisés, segmentation, supervision et protection des accès pour garantir la continuité et la résilience.',
-    },
-    {
-      title: 'Monitoring et observabilité',
-      description:
-        'Suivi des performances, alertes, analyse des incidents et amélioration de la disponibilité des services informatiques.',
-    },
-    {
-      title: 'Automatisation et support',
-      description:
-        "Scripts, optimisation, documentation et support technique pour réduire les tâches répétitives et stabiliser l\u2019environnement opérationnel.",
-    },
-  ];
+    []
+  );
 
   return (
     <main className="collection-page about-page">
@@ -343,19 +333,35 @@ export function ServicesPage() {
         </p>
       </section>
       <section className="about-skills">
-        <div className="skill-groups">
-          {services.map((service, index) => (
-            <article className="skill-group" key={service.title}>
-              <h3>{service.title}</h3>
-              <ul>
-                <li>
-                  <strong>Service {index + 1}</strong>
-                  <p>{service.description}</p>
-                </li>
-              </ul>
-            </article>
-          ))}
-        </div>
+        {data.loading ? (
+          <div className="collection-loading">
+            <span className="collection-spinner" />
+            Chargement des services...
+          </div>
+        ) : serviceGroups.length === 0 ? (
+          <p className="collection-empty">Aucun service publié pour le moment.</p>
+        ) : (
+          <div className="skill-groups">
+            {serviceGroups.map((group) => (
+              <article className="skill-group" key={group.label}>
+                <h3>{group.label}</h3>
+                <ul>
+                  {group.items.map((item) => (
+                    <li key={item.id}>
+                      <strong>{item.title}</strong>
+                      {typeof item.data.description === 'string' && (
+                        <p>{item.data.description}</p>
+                      )}
+                      {typeof item.data.context === 'string' && item.data.context && (
+                        <p className="service-context">{item.data.context}</p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            ))}
+          </div>
+        )}
       </section>
     </main>
   );

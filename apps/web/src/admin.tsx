@@ -159,6 +159,7 @@ function AdminApp() {
   const [contentType, setContentType] = useState<ContentType>("project");
   const [counts, setCounts] = useState<Counts | null>(null);
   const [items, setItems] = useState<Item[]>([]);
+  const [loadingItems, setLoadingItems] = useState(false);
   const [messages, setMessages] = useState<Record<string, unknown>[]>([]);
   const [editing, setEditing] = useState<Item | null>(null);
   const [notice, setNotice] = useState("");
@@ -180,8 +181,14 @@ function AdminApp() {
     void refresh();
   }, []);
   useEffect(() => {
-    if (authenticated && section === "content")
-      void request(`/admin/items?type=${contentType}`).then(setItems);
+    if (authenticated && section === "content") {
+      setLoadingItems(true);
+      setItems([]);
+      setEditing(null);
+      void request(`/admin/items?type=${contentType}`)
+        .then(setItems)
+        .finally(() => setLoadingItems(false));
+    }
   }, [authenticated, section, contentType]);
   useEffect(() => {
     if (authenticated && section === "messages")
@@ -310,12 +317,16 @@ function AdminApp() {
             type={contentType}
             setType={setContentType}
             items={items}
+            loading={loadingItems}
             editing={editing}
             setEditing={setEditing}
             setNotice={setNotice}
-            reload={() =>
-              void request(`/admin/items?type=${contentType}`).then(setItems)
-            }
+            reload={() => {
+              setLoadingItems(true);
+              void request(`/admin/items?type=${contentType}`)
+                .then(setItems)
+                .finally(() => setLoadingItems(false));
+            }}
           />
         )}
         {section === "profile" && (
@@ -738,6 +749,7 @@ function ContentManager({
   type,
   setType,
   items,
+  loading,
   editing,
   setEditing,
   setNotice,
@@ -746,6 +758,7 @@ function ContentManager({
   type: ContentType;
   setType: (type: ContentType) => void;
   items: Item[];
+  loading?: boolean;
   editing: Item | null;
   setEditing: (item: Item | null) => void;
   setNotice: (notice: string) => void;
@@ -1090,12 +1103,17 @@ function ContentManager({
             </div>
           </div>
         ))}
-        {items.length === 0 && (
+        {loading ? (
+          <div className="empty-table">
+            <span className="login-status-dot" style={{ display: 'inline-block', marginRight: 8, width: 10, height: 10 }} />
+            Chargement...
+          </div>
+        ) : items.length === 0 ? (
           <div className="empty-table">
             Aucun contenu pour l’instant. Ajoutez uniquement des informations
             vérifiées.
           </div>
-        )}
+        ) : null}
       </div>
 
       {confirmId !== null && (
