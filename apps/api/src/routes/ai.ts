@@ -78,9 +78,26 @@ router.post("/chat", requireAdmin, async (req: any, res: any, next: any) => {
       }
     });
 
+    // If the model only called tools without a follow-up text, reconstruct
+    // a response from tool results so the user always gets feedback.
+    let finalText = text;
+    if (!finalText) {
+      const toolResults: string[] = [];
+      for (const step of steps) {
+        for (const part of step.toolResults ?? []) {
+          if (typeof part.result === "string") {
+            toolResults.push(part.result);
+          }
+        }
+      }
+      finalText = toolResults.length > 0
+        ? toolResults.join("\n")
+        : "Action effectuée.";
+    }
+
     res.json({ 
-      message: { role: "assistant", text },
-      steps // Send steps if we want to show tools calls in UI
+      message: { role: "assistant", text: finalText },
+      steps
     });
   } catch (err: any) {
     res.status(500).json({ error: err.message || "Erreur inconnue de l'IA" });
