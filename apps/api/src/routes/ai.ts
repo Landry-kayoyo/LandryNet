@@ -52,7 +52,7 @@ router.post("/chat", requireAdmin, async (req: any, res: any, next: any) => {
       maxSteps: 5,
       tools: {
         createContent: tool({
-          description: "Créer un nouveau contenu (projet, compétence, service, etc.)",
+          description: "Créer un nouveau contenu (projet, compétence, service, etc.). Fournis le plus de détails possible dans l'objet 'data' (category, description, technologies, coverImage, link, date, etc.).",
           parameters: z.object({
             type: z.enum(["project", "skill", "technology", "service", "timeline", "social"]),
             title: z.string(),
@@ -60,11 +60,11 @@ router.post("/chat", requireAdmin, async (req: any, res: any, next: any) => {
           }),
           execute: async ({ type, title, data }) => {
             const id = await createCmsItem({ type, title, data, visible: false, published: false });
-            return `Le contenu '${title}' a été créé avec l'ID ${id}. Il est en brouillon.`;
+            return `Le contenu '${title}' a été créé avec succès (ID: ${id}).`;
           }
         }),
         updateContent: tool({
-          description: "Mettre à jour un contenu existant (par ex. pour améliorer son SEO)",
+          description: "Mettre à jour un contenu existant. Modifie uniquement les champs nécessaires dans 'data'.",
           parameters: z.object({
             id: z.number(),
             title: z.string().optional(),
@@ -72,7 +72,7 @@ router.post("/chat", requireAdmin, async (req: any, res: any, next: any) => {
           }),
           execute: async ({ id, title, data }) => {
             await updateCmsItem(id, { title, data });
-            return `Le contenu ID ${id} a bien été mis à jour.`;
+            return `Le contenu ID ${id} a été mis à jour avec succès.`;
           }
         })
       }

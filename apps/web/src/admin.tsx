@@ -936,10 +936,15 @@ function ContentManager({
   };
   const confirmRemove = async () => {
     if (confirmId === null) return;
-    await request(`/admin/items/${confirmId}`, { method: "DELETE" });
-    setConfirmId(null);
-    setNotice("Contenu supprimé.");
-    reload();
+    try {
+      await request(`/admin/items/${confirmId}`, { method: "DELETE" });
+      setConfirmId(null);
+      setNotice("Contenu supprimé.");
+      reload();
+    } catch (err: any) {
+      setNotice(err.message || "Erreur lors de la suppression.");
+      setConfirmId(null);
+    }
   };
   const [nestedEditing, setNestedEditing] = useState<Item | null>(null);
   const saveNested = async (event: FormEvent<HTMLFormElement>) => {
@@ -1354,7 +1359,7 @@ function AiSettingsEditor({ setNotice }: { setNotice: (msg: string) => void }) {
     api_key_gemini: "",
     api_key_deepseek: "",
     api_key_openai: "",
-    system_prompt: "Tu es l'assistant de Landry Kayoyo, un développeur Full-Stack d'élite.",
+    system_prompt: "Tu es l'assistant IA de Landry. Règle d'or: Sois naturel, direct et très concis. N'utilise AUCUN markdown (pas de **). Ne pose pas de questions inutiles. Exécute simplement la tâche demandée avec les outils.",
     seo_rules: "Chaque description doit faire 120-160 caractères. Utilise des mots clés tech."
   });
   const [loading, setLoading] = useState(true);
@@ -1429,36 +1434,45 @@ function AiSettingsEditor({ setNotice }: { setNotice: (msg: string) => void }) {
 
           {activeModelStr.includes("gemini") && (
             <label>
-              Clé API Google Gemini <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" style={{ fontSize: '0.8rem', color: 'var(--admin-lime)', marginLeft: 8 }}>Obtenir une clé gratuite ↗</a>
+              Clé API Google Gemini 
+              {data.api_key_gemini && data.api_key_gemini.length > 5 ? <span style={{ color: 'var(--admin-lime)', marginLeft: 8, fontSize: '0.8rem', fontWeight: 'bold' }}>✓ Configurrée</span> : <span style={{ color: 'var(--admin-danger)', marginLeft: 8, fontSize: '0.8rem', fontWeight: 'bold' }}>⚠️ Non configurée</span>}
+              <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" style={{ fontSize: '0.8rem', color: 'var(--admin-blue)', marginLeft: 8 }}>Obtenir une clé ↗</a>
               <input
                 type="password"
                 placeholder="AIzaSy..."
                 value={String(data.api_key_gemini || "")}
                 onChange={e => setData({ ...data, api_key_gemini: e.target.value })}
+                style={{ width: "100%", padding: "10px", marginTop: "6px", background: "rgba(0,0,0,0.2)", border: "1px solid var(--admin-line)", color: "white", borderRadius: "8px" }}
               />
             </label>
           )}
 
           {activeModelStr.includes("deepseek") && (
             <label>
-              Clé API DeepSeek <a href="https://platform.deepseek.com/" target="_blank" rel="noreferrer" style={{ fontSize: '0.8rem', color: 'var(--admin-lime)', marginLeft: 8 }}>Plateforme ↗</a>
+              Clé API DeepSeek 
+              {data.api_key_deepseek && data.api_key_deepseek.length > 5 ? <span style={{ color: 'var(--admin-lime)', marginLeft: 8, fontSize: '0.8rem', fontWeight: 'bold' }}>✓ Configurrée</span> : <span style={{ color: 'var(--admin-danger)', marginLeft: 8, fontSize: '0.8rem', fontWeight: 'bold' }}>⚠️ Non configurée</span>}
+              <a href="https://platform.deepseek.com/" target="_blank" rel="noreferrer" style={{ fontSize: '0.8rem', color: 'var(--admin-blue)', marginLeft: 8 }}>Plateforme ↗</a>
               <input
                 type="password"
                 placeholder="sk-..."
                 value={String(data.api_key_deepseek || "")}
                 onChange={e => setData({ ...data, api_key_deepseek: e.target.value })}
+                style={{ width: "100%", padding: "10px", marginTop: "6px", background: "rgba(0,0,0,0.2)", border: "1px solid var(--admin-line)", color: "white", borderRadius: "8px" }}
               />
             </label>
           )}
 
           {activeModelStr.includes("gpt") && (
             <label>
-              Clé API OpenAI <a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer" style={{ fontSize: '0.8rem', color: 'var(--admin-lime)', marginLeft: 8 }}>Plateforme ↗</a>
+              Clé API OpenAI 
+              {data.api_key_openai && data.api_key_openai.length > 5 ? <span style={{ color: 'var(--admin-lime)', marginLeft: 8, fontSize: '0.8rem', fontWeight: 'bold' }}>✓ Configurrée</span> : <span style={{ color: 'var(--admin-danger)', marginLeft: 8, fontSize: '0.8rem', fontWeight: 'bold' }}>⚠️ Non configurée</span>}
+              <a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer" style={{ fontSize: '0.8rem', color: 'var(--admin-blue)', marginLeft: 8 }}>Plateforme ↗</a>
               <input
                 type="password"
                 placeholder="sk-..."
                 value={String(data.api_key_openai || "")}
                 onChange={e => setData({ ...data, api_key_openai: e.target.value })}
+                style={{ width: "100%", padding: "10px", marginTop: "6px", background: "rgba(0,0,0,0.2)", border: "1px solid var(--admin-line)", color: "white", borderRadius: "8px" }}
               />
             </label>
           )}
