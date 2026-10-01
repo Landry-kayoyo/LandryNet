@@ -1012,14 +1012,39 @@ function ContentManager({
               />
             </label>
           )}
-          <label>
-            {type === "social" ? "Lien URL" : "Contexte / détails"}
-            <textarea
-              value={String(editing.data.context ?? "")}
-              onChange={(event) => updateData({ context: event.target.value })}
-              rows={4}
-            />
-          </label>
+          {type !== "social" && (
+            <label>
+              Contexte / détails
+              <textarea
+                value={String(editing.data.context ?? "")}
+                onChange={(event) => updateData({ context: event.target.value })}
+                rows={4}
+              />
+            </label>
+          )}
+          {type === "social" && (
+            <>
+              <label>
+                Lien URL
+                <input
+                  type="url"
+                  value={String(editing.data.url ?? "")}
+                  onChange={(event) => updateData({ url: event.target.value })}
+                  placeholder="https://..."
+                  required
+                />
+              </label>
+              <label>
+                Icône (Optionnel)
+                <input
+                  type="text"
+                  value={String(editing.data.icon ?? "")}
+                  onChange={(event) => updateData({ icon: event.target.value })}
+                  placeholder="github, linkedin, twitter, instagram..."
+                />
+              </label>
+            </>
+          )}
           {type === "project" && (
             <label>
               Technologies
