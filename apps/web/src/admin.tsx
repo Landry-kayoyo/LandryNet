@@ -159,9 +159,17 @@ function AiChatBubble({ setNotice }: { setNotice: (msg: string) => void }) {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [thinking, setThinking] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    { role: "assistant", text: "Bonjour 👋 Je suis ton assistant IA intégré. Je connais tout ton portfolio et je peux créer ou améliorer ton contenu. Que veux-tu faire ?" }
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    try {
+      const saved = localStorage.getItem("ai_chat_history");
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [{ role: "assistant", text: "Bonjour ! Je suis ton assistant IA intégré. Je connais tout ton portfolio et je peux créer ou améliorer ton contenu. Que veux-tu faire ?" }];
+  });
+
+  React.useEffect(() => {
+    localStorage.setItem("ai_chat_history", JSON.stringify(messages));
+  }, [messages]);
   const endRef = React.useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom when messages change
@@ -207,7 +215,9 @@ function AiChatBubble({ setNotice }: { setNotice: (msg: string) => void }) {
   };
 
   const clearChat = () => {
-    setMessages([{ role: "assistant", text: "Nouvelle conversation. Comment puis-je t'aider ?" }]);
+    const init = [{ role: "assistant", text: "Nouvelle conversation. Comment puis-je t'aider ?" }] as ChatMessage[];
+    setMessages(init);
+    localStorage.setItem("ai_chat_history", JSON.stringify(init));
   };
 
   return (
@@ -1359,7 +1369,7 @@ function AiSettingsEditor({ setNotice }: { setNotice: (msg: string) => void }) {
     api_key_gemini: "",
     api_key_deepseek: "",
     api_key_openai: "",
-    system_prompt: "Tu es l'assistant IA de Landry. Règle d'or: Sois naturel, direct et très concis. N'utilise AUCUN markdown (pas de **). Ne pose pas de questions inutiles. Exécute simplement la tâche demandée avec les outils.",
+    system_prompt: "Tu es l'assistant IA de Landry. Règle d'or: Sois naturel, direct et très concis. N'utilise AUCUN markdown (pas de **). N'utilise AUCUN emoji. Ne pose pas de questions inutiles. Exécute simplement la tâche demandée avec les outils.",
     seo_rules: "Chaque description doit faire 120-160 caractères. Utilise des mots clés tech."
   });
   const [loading, setLoading] = useState(true);
