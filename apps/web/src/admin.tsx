@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import {
   BarChart3,
+  Briefcase,
   FileText,
   FolderKanban,
   LayoutDashboard,
@@ -31,7 +32,7 @@ const API =
     window.location.hostname === "127.0.0.1")
     ? "http://localhost:5000/api"
     : "/api");
-type ContentType = "skill" | "technology" | "project" | "timeline" | "social";
+type ContentType = "skill" | "technology" | "project" | "timeline" | "social" | "service";
 type Item = {
   id: number;
   type: ContentType;
@@ -53,6 +54,7 @@ type Counts = {
   technologies: number;
   timeline: number;
   socials: number;
+  services: number;
   messages: number;
   unreadMessages: number;
   evolution?: EvolutionPoint[];
@@ -64,6 +66,7 @@ const labels: Record<ContentType, string> = {
   project: "Projets",
   timeline: "Parcours",
   social: "Réseaux sociaux",
+  service: "Services",
 };
 
 async function request(path: string, options: RequestInit = {}) {
@@ -470,13 +473,14 @@ function Dashboard({
   counts: Counts | null;
   onMessages: () => void;
 }) {
-  const total = (counts?.projects ?? 0) + (counts?.skills ?? 0) + (counts?.technologies ?? 0) + (counts?.timeline ?? 0) + (counts?.socials ?? 0);
+  const total = (counts?.projects ?? 0) + (counts?.skills ?? 0) + (counts?.technologies ?? 0) + (counts?.timeline ?? 0) + (counts?.socials ?? 0) + (counts?.services ?? 0);
   const donutData = [
-    { label: "Projets",       value: counts?.projects ?? 0,     color: "#818cf8" },
-    { label: "Comp.",         value: counts?.skills ?? 0,       color: "#38bdf8" },
-    { label: "Technos",       value: counts?.technologies ?? 0, color: "#a78bfa" },
-    { label: "Parcours",      value: counts?.timeline ?? 0,     color: "#34d399" },
-    { label: "Réseaux",       value: counts?.socials ?? 0,      color: "#f472b6" },
+    { label: "Projets",   value: counts?.projects ?? 0,     color: "#818cf8" },
+    { label: "Comp.",     value: counts?.skills ?? 0,       color: "#38bdf8" },
+    { label: "Technos",   value: counts?.technologies ?? 0, color: "#a78bfa" },
+    { label: "Parcours",  value: counts?.timeline ?? 0,     color: "#34d399" },
+    { label: "Réseaux",   value: counts?.socials ?? 0,      color: "#f472b6" },
+    { label: "Services",  value: counts?.services ?? 0,     color: "#fb923c" },
   ];
   const cards = [
     ["Projets",      counts?.projects ?? 0,      FolderKanban, "#818cf8"],
@@ -484,6 +488,7 @@ function Dashboard({
     ["Technologies", counts?.technologies ?? 0,  FileText,     "#a78bfa"],
     ["Parcours",     counts?.timeline ?? 0,      UserRound,    "#34d399"],
     ["Réseaux",      counts?.socials ?? 0,       Share2,       "#f472b6"],
+    ["Services",     counts?.services ?? 0,      Briefcase,    "#fb923c"],
     ["Messages",     counts?.messages ?? 0,      Mail,         "#f59e0b"],
     ["Non lus",      counts?.unreadMessages ?? 0, Mail,        "#f87171"],
   ] as const;
@@ -683,9 +688,14 @@ function ContentManager({
       );
     }
   };
+  const [confirmId, setConfirmId] = useState<number | null>(null);
   const remove = async (id: number) => {
-    if (!window.confirm("Supprimer définitivement ce contenu ?")) return;
-    await request(`/admin/items/${id}`, { method: "DELETE" });
+    setConfirmId(id);
+  };
+  const confirmRemove = async () => {
+    if (confirmId === null) return;
+    await request(`/admin/items/${confirmId}`, { method: "DELETE" });
+    setConfirmId(null);
     setNotice("Contenu supprimé.");
     reload();
   };
@@ -951,6 +961,21 @@ function ContentManager({
           </div>
         )}
       </div>
+
+      {confirmId !== null && (
+        <div className="sidebar-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div className="editor-panel" style={{ width: 400, maxWidth: '90%', margin: 0, position: 'relative', animation: 'fadeIn 0.2s ease-out' }}>
+            <h3 style={{ margin: '0 0 12px' }}>Supprimer le contenu ?</h3>
+            <p style={{ margin: '0 0 24px', color: 'var(--admin-muted)' }}>Cette action est irréversible. Êtes-vous sûr de vouloir continuer ?</p>
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+              <button className="admin-button admin-button-light" onClick={() => setConfirmId(null)}>Annuler</button>
+              <button className="admin-button" onClick={() => void confirmRemove()} style={{ background: 'rgba(248, 113, 113, 0.1)', color: 'var(--admin-danger)' }}>
+                <Trash2 size={16} /> Confirmer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

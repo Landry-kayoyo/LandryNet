@@ -106,7 +106,7 @@ async function getPool() {
   return pool;
 }
 
-export type CmsContentType = "skill" | "technology" | "project" | "timeline" | "social";
+export type CmsContentType = "skill" | "technology" | "project" | "timeline" | "social" | "service";
 
 export type CmsItem = {
   id: number;
@@ -283,6 +283,7 @@ export async function getPublicCmsData() {
     projects: publicItems.filter((item) => item.type === "project"),
     timeline: publicItems.filter((item) => item.type === "timeline"),
     socials: publicItems.filter((item) => item.type === "social"),
+    services: publicItems.filter((item) => item.type === "service"),
   };
 }
 

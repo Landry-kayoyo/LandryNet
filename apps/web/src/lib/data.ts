@@ -71,7 +71,7 @@ export const collagePhotos = [
   },
 ];
 
-export const defaultCover = `${import.meta.env.BASE_URL}default-cover.svg`;
+export const defaultCover = `${import.meta.env.VITE_SITE_URL || 'https://landrynet.vercel.app'}/og-cover.jpg`;
 export const siteUrl = import.meta.env.VITE_SITE_URL || 'https://landrynet.vercel.app';
 export const contactEmail = import.meta.env.VITE_CONTACT_EMAIL || 'hello@landrynet.vercel.app';
 export const apiBaseUrl =
