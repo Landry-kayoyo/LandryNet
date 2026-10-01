@@ -159,6 +159,7 @@ function AdminApp() {
   const [contentType, setContentType] = useState<ContentType>("project");
   const [counts, setCounts] = useState<Counts | null>(null);
   const [items, setItems] = useState<Item[]>([]);
+  const [allTechnologies, setAllTechnologies] = useState<Item[]>([]);
   const [loadingItems, setLoadingItems] = useState(false);
   const [messages, setMessages] = useState<Record<string, unknown>[]>([]);
   const [editing, setEditing] = useState<Item | null>(null);
@@ -188,6 +189,8 @@ function AdminApp() {
       void request(`/admin/items?type=${contentType}`)
         .then(setItems)
         .finally(() => setLoadingItems(false));
+      // Toujours charger les technologies pour les suggestions du MultiCombobox
+      void request("/admin/items?type=technology").then(setAllTechnologies);
     }
   }, [authenticated, section, contentType]);
   useEffect(() => {
@@ -317,6 +320,7 @@ function AdminApp() {
             type={contentType}
             setType={setContentType}
             items={items}
+            allTechnologies={allTechnologies}
             loading={loadingItems}
             editing={editing}
             setEditing={setEditing}
@@ -326,6 +330,7 @@ function AdminApp() {
               void request(`/admin/items?type=${contentType}`)
                 .then(setItems)
                 .finally(() => setLoadingItems(false));
+              void request("/admin/items?type=technology").then(setAllTechnologies);
             }}
           />
         )}
@@ -749,6 +754,7 @@ function ContentManager({
   type,
   setType,
   items,
+  allTechnologies,
   loading,
   editing,
   setEditing,
@@ -758,6 +764,7 @@ function ContentManager({
   type: ContentType;
   setType: (type: ContentType) => void;
   items: Item[];
+  allTechnologies?: Item[];
   loading?: boolean;
   editing: Item | null;
   setEditing: (item: Item | null) => void;
@@ -1021,7 +1028,7 @@ function ContentManager({
                 onChange={(val) => updateData({ technologies: val })}
                 suggestions={[
                   ...new Set(
-                    items.filter(i => i.type === "technology").map(i => i.title)
+                    (allTechnologies ?? items.filter(i => i.type === "technology")).map(i => i.title)
                   )
                 ]}
                 onCreateNew={(name) => {
@@ -1032,7 +1039,7 @@ function ContentManager({
                     data: {},
                     published: true,
                     visible: true,
-                    sortOrder: items.filter(i => i.type === "technology").length,
+                    sortOrder: (allTechnologies ?? items.filter(i => i.type === "technology")).length,
                   });
                 }}
               />
@@ -1163,7 +1170,7 @@ function ContentManager({
                 <CategoryCombobox
                   value={String(nestedEditing.data.category ?? "")}
                   onChange={(val) => setNestedEditing({ ...nestedEditing, data: { ...nestedEditing.data, category: val } })}
-                  suggestions={[...new Set(items.filter(i => i.type === "technology").map((item) => String(item.data.category ?? "")).filter(Boolean))]}
+                  suggestions={[...new Set((allTechnologies ?? items.filter(i => i.type === "technology")).map((item) => String(item.data.category ?? "")).filter(Boolean))]}
                 />
               </label>
             </div>
