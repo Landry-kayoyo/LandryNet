@@ -188,9 +188,12 @@ function AiChatBubble({ setNotice }: { setNotice: (msg: string) => void }) {
     setThinking(true);
 
     try {
-      // Build messages array in AI SDK format (exclude error messages)
-      const history = [...messages, newMsg]
-        .filter(m => !m.isError)
+      // Build messages array: exclude errors, and ensure we start from the
+      // first user message (APIs reject histories that start with "assistant")
+      const allMsgs = [...messages, newMsg].filter(m => !m.isError);
+      const firstUserIdx = allMsgs.findIndex(m => m.role === "user");
+      const history = allMsgs
+        .slice(firstUserIdx >= 0 ? firstUserIdx : 0)
         .map(m => ({ role: m.role, content: m.text }));
 
       const response = await request("/admin/chat", {
@@ -206,7 +209,7 @@ function AiChatBubble({ setNotice }: { setNotice: (msg: string) => void }) {
       const errMsg = err instanceof Error ? err.message : "Erreur de connexion.";
       setMessages(prev => [...prev, {
         role: "assistant",
-        text: `❌ ${errMsg}`,
+        text: `Erreur : ${errMsg}`,
         isError: true,
       }]);
     } finally {
