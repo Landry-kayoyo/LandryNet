@@ -191,6 +191,14 @@ function AdminApp() {
   };
   return (
     <div className="admin-app">
+      {/* Overlay mobile pour fermer la sidebar en cliquant à côté */}
+      {mobileOpen && (
+        <div
+          className="sidebar-overlay"
+          onClick={() => setMobileOpen(false)}
+          aria-label="Fermer le menu"
+        />
+      )}
       <aside className={mobileOpen ? "admin-sidebar is-open" : "admin-sidebar"}>
         <div className="admin-brand">
           <span className="brand-square">L</span>
@@ -199,6 +207,14 @@ function AdminApp() {
             <small>CONTENT STUDIO</small>
           </span>
         </div>
+        {/* Bouton fermer dans la sidebar elle-même */}
+        <button
+          className="sidebar-close-btn"
+          onClick={() => setMobileOpen(false)}
+          aria-label="Fermer le menu"
+        >
+          <X size={20} />
+        </button>
         <nav>
           <button
             className={section === "dashboard" ? "is-active" : ""}
@@ -243,15 +259,15 @@ function AdminApp() {
           <button
             className="mobile-menu-button"
             onClick={() => setMobileOpen((open) => !open)}
-            aria-label="Menu"
+            aria-label={mobileOpen ? "Fermer le menu" : "Ouvrir le menu"}
           >
-            {mobileOpen ? <X /> : <Menu />}
+            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
           <div>
             <span className="admin-eyebrow">Workspace / {section}</span>
             <h2>
               {section === "dashboard"
-                ? "Vue d’ensemble"
+                ? "Vue d'ensemble"
                 : section === "content"
                   ? labels[contentType]
                   : section === "messages"
@@ -307,6 +323,7 @@ function AdminApp() {
     </div>
   );
 }
+
 
 function EvolutionChart({ data }: { data: EvolutionPoint[] }) {
   const maxValue = Math.max(
@@ -406,6 +423,29 @@ function EvolutionChart({ data }: { data: EvolutionPoint[] }) {
   );
 }
 
+// Mini donut chart SVG
+function DonutChart({ value, max, color }: { value: number; max: number; color: string }) {
+  const r = 28;
+  const circumference = 2 * Math.PI * r;
+  const ratio = max > 0 ? value / max : 0;
+  const dash = ratio * circumference;
+  return (
+    <svg viewBox="0 0 70 70" className="donut-svg">
+      <circle cx="35" cy="35" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="8" />
+      <circle
+        cx="35" cy="35" r={r} fill="none"
+        stroke={color}
+        strokeWidth="8"
+        strokeDasharray={`${dash} ${circumference}`}
+        strokeLinecap="round"
+        transform="rotate(-90 35 35)"
+        style={{ transition: 'stroke-dasharray 1s ease' }}
+      />
+      <text x="35" y="39" textAnchor="middle" fill="white" fontSize="13" fontWeight="700" fontFamily="Syne, sans-serif">{value}</text>
+    </svg>
+  );
+}
+
 function Dashboard({
   counts,
   onMessages,
@@ -413,13 +453,20 @@ function Dashboard({
   counts: Counts | null;
   onMessages: () => void;
 }) {
+  const total = (counts?.projects ?? 0) + (counts?.skills ?? 0) + (counts?.technologies ?? 0) + (counts?.timeline ?? 0);
+  const donutData = [
+    { label: "Projets",       value: counts?.projects ?? 0,     color: "#818cf8" },
+    { label: "Compétences",   value: counts?.skills ?? 0,       color: "#38bdf8" },
+    { label: "Technologies",  value: counts?.technologies ?? 0, color: "#a78bfa" },
+    { label: "Parcours",      value: counts?.timeline ?? 0,     color: "#34d399" },
+  ];
   const cards = [
-    ["Projets", counts?.projects ?? 0, FolderKanban],
-    ["Compétences", counts?.skills ?? 0, BarChart3],
-    ["Technologies", counts?.technologies ?? 0, FileText],
-    ["Parcours", counts?.timeline ?? 0, UserRound],
-    ["Messages", counts?.messages ?? 0, Mail],
-    ["Non lus", counts?.unreadMessages ?? 0, Mail],
+    ["Projets",      counts?.projects ?? 0,      FolderKanban, "#818cf8"],
+    ["Compétences",  counts?.skills ?? 0,        BarChart3,    "#38bdf8"],
+    ["Technologies", counts?.technologies ?? 0,  FileText,     "#a78bfa"],
+    ["Parcours",     counts?.timeline ?? 0,      UserRound,    "#34d399"],
+    ["Messages",     counts?.messages ?? 0,      Mail,         "#f59e0b"],
+    ["Non lus",      counts?.unreadMessages ?? 0, Mail,        "#f87171"],
   ] as const;
   return (
     <section className="admin-content">
@@ -429,12 +476,7 @@ function Dashboard({
           <h3>Votre infrastructure éditoriale, au même endroit.</h3>
         </div>
         <div className="dashboard-actions">
-          <a
-            className="admin-button admin-button-light"
-            href="/"
-            target="_blank"
-            rel="noreferrer"
-          >
+          <a className="admin-button admin-button-light" href="/" target="_blank" rel="noreferrer">
             Voir le site public ↗
           </a>
           <button className="admin-button" onClick={onMessages}>
@@ -442,34 +484,66 @@ function Dashboard({
           </button>
         </div>
       </div>
+
+      {/* Stat cards */}
       <div className="stat-grid">
-        {cards.map(([label, value, Icon]) => (
-          <div className="stat-card" key={label}>
-            <Icon size={18} />
+        {cards.map(([label, value, Icon, color]) => (
+          <div className="stat-card" key={label} style={{ borderTop: `3px solid ${color}` }}>
+            <Icon size={18} style={{ color }} />
             <span>{label}</span>
             <strong>{value}</strong>
           </div>
         ))}
       </div>
-      <div className="evolution-panel">
-        <div className="evolution-heading">
-          <div>
-            <span className="admin-eyebrow">Évolution</span>
-            <h3>Le contenu prend forme.</h3>
+
+      {/* Row: donut charts + evolution */}
+      <div className="dashboard-charts-row">
+        {/* Donut breakdown */}
+        <div className="donut-panel">
+          <div className="panel-heading">
+            <span className="admin-eyebrow">Répartition</span>
+            <h3>Contenus par catégorie</h3>
           </div>
-          <div className="evolution-legend">
-            <span>
-              <i className="legend-dot legend-dot-content" /> Contenus
-            </span>
-            <span>
-              <i className="legend-dot legend-dot-messages" /> Messages
-            </span>
+          <div className="donut-grid">
+            {donutData.map((d) => (
+              <div className="donut-item" key={d.label}>
+                <DonutChart value={d.value} max={Math.max(total, 1)} color={d.color} />
+                <span style={{ color: d.color }}>{d.label}</span>
+              </div>
+            ))}
+          </div>
+          <div className="donut-total">
+            <span className="admin-eyebrow">Total</span>
+            <strong>{total} contenus</strong>
           </div>
         </div>
-        <div className="evolution-chart">
-          <EvolutionChart data={counts?.evolution ?? []} />
+
+        {/* Evolution line chart */}
+        <div className="evolution-panel" style={{ flex: 1 }}>
+          <div className="evolution-heading">
+            <div>
+              <span className="admin-eyebrow">Évolution</span>
+              <h3>Le contenu prend forme.</h3>
+            </div>
+            <div className="evolution-legend">
+              <span><i className="legend-dot legend-dot-content" /> Contenus</span>
+              <span><i className="legend-dot legend-dot-messages" /> Messages</span>
+            </div>
+          </div>
+          <div className="evolution-chart">
+            <EvolutionChart data={counts?.evolution ?? []} />
+          </div>
         </div>
       </div>
+
+      {/* Messages non lus rapide */}
+      {(counts?.unreadMessages ?? 0) > 0 && (
+        <div className="unread-banner" onClick={onMessages}>
+          <Mail size={16} />
+          <span>Vous avez <strong>{counts?.unreadMessages}</strong> message{(counts?.unreadMessages ?? 0) > 1 ? 's' : ''} non lu{(counts?.unreadMessages ?? 0) > 1 ? 's' : ''} — cliquez pour les consulter</span>
+          <span className="unread-arrow">→</span>
+        </div>
+      )}
     </section>
   );
 }
