@@ -241,6 +241,14 @@ body {
 
 .admin-error { padding: 14px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: var(--admin-danger); font-size: .85rem; border-radius: 8px; text-align: center; }
 
+.multi-combobox .multi-values { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 12px; background: rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; min-height: 48px; align-items: center; }
+.multi-combobox:focus-within .multi-values { border-color: rgba(255,255,255,0.25); background: rgba(0,0,0,0.3); }
+.multi-chip { display: flex; align-items: center; gap: 4px; background: var(--admin-card); border: 1px solid rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 6px; font-size: .85rem; color: var(--admin-ink); }
+.multi-chip button { background: none; border: none; color: var(--admin-muted); cursor: pointer; padding: 0; display: grid; place-items: center; }
+.multi-chip button:hover { color: var(--admin-danger); }
+.multi-combobox .combobox-input { flex: 1; min-width: 120px; border: none; background: transparent; padding: 0; height: 28px; border-radius: 0; font-size: .9rem; }
+.multi-combobox .combobox-input:focus { border: none; background: transparent; }
+
 /* Responsive Adjustments */
 @media (max-width: 1000px) { .stat-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 720px) { 

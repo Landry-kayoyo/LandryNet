@@ -643,6 +643,97 @@ function CategoryCombobox({
   );
 }
 
+function MultiCombobox({
+  values,
+  onChange,
+  suggestions,
+  onCreateNew,
+}: {
+  values: string[];
+  onChange: (val: string[]) => void;
+  suggestions: string[];
+  onCreateNew: (name: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const ref = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const unselected = suggestions.filter((s) => !values.includes(s));
+  const filtered = query
+    ? unselected.filter((s) => s.toLowerCase().includes(query.toLowerCase()))
+    : unselected;
+
+  const select = (item: string) => {
+    onChange([...values, item]);
+    setQuery("");
+    setOpen(false);
+  };
+  const create = (item: string) => {
+    onCreateNew(item);
+    setQuery("");
+    setOpen(false);
+  };
+  const remove = (item: string) => {
+    onChange(values.filter((v) => v !== item));
+  };
+
+  return (
+    <div ref={ref} className="combobox-wrap multi-combobox">
+      <div className="multi-values">
+        {values.map((v) => (
+          <span key={v} className="multi-chip">
+            {v}
+            <button type="button" onClick={() => remove(v)}><X size={12} /></button>
+          </span>
+        ))}
+        <input
+          className="combobox-input"
+          value={query}
+          placeholder="Ajouter une technologie..."
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setOpen(true);
+          }}
+          onFocus={() => setOpen(true)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && query) {
+              e.preventDefault();
+              if (filtered.includes(query)) select(query);
+              else create(query);
+            }
+          }}
+        />
+      </div>
+      {open && (filtered.length > 0 || (query && !unselected.includes(query))) && (
+        <ul className="combobox-list">
+          {filtered.map((item) => (
+            <li
+              key={item}
+              className="combobox-option"
+              onMouseDown={() => select(item)}
+            >
+              {item}
+            </li>
+          ))}
+          {query && !filtered.includes(query) && (
+            <li className="combobox-option combobox-create" onMouseDown={() => create(query)}>
+              <Plus size={13} /> Ajouter la techno «&nbsp;{query}&nbsp;»
+            </li>
+          )}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 function ContentManager({
   type,
   setType,
@@ -699,6 +790,35 @@ function ContentManager({
     setNotice("Contenu supprimé.");
     reload();
   };
+  const [nestedEditing, setNestedEditing] = useState<Item | null>(null);
+  const saveNested = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!nestedEditing) return;
+    try {
+      const payload = {
+        ...nestedEditing,
+        data: nestedEditing.data,
+      };
+      await request("/admin/items", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+      const newTechs = [
+        ...(Array.isArray(editing?.data.technologies)
+          ? editing.data.technologies
+          : []),
+        nestedEditing.title,
+      ];
+      updateData({ technologies: newTechs });
+      setNestedEditing(null);
+      setNotice(`Technologie ${nestedEditing.title} ajoutée.`);
+      reload();
+    } catch (cause) {
+      setNotice(
+        cause instanceof Error ? cause.message : "Enregistrement impossible.",
+      );
+    }
+  };
   const uploadCover = async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
@@ -727,8 +847,8 @@ function ContentManager({
   const coverImage =
     type === "project" ? String(editing?.data.coverImage ?? "") : "";
   const technologiesValue = Array.isArray(editing?.data.technologies)
-    ? editing.data.technologies.join(", ")
-    : String(editing?.data.technologies ?? "");
+    ? editing.data.technologies.map(String)
+    : [];
   return (
     <section className="admin-content">
       <div className="content-toolbar">
@@ -802,20 +922,23 @@ function ContentManager({
                 }
               />
             </label>
-            <label>
-              Catégorie / niveau
-              <CategoryCombobox
-                value={String(editing.data.category ?? "")}
-                onChange={(val) => updateData({ category: val })}
-                suggestions={[
-                  ...new Set(
-                    items
-                      .map((item) => String(item.data.category ?? ""))
-                      .filter(Boolean)
-                  ),
-                ]}
-              />
-            </label>
+            {type !== "project" && type !== "social" && (
+              <label>
+                Catégorie / niveau
+                <CategoryCombobox
+                  value={String(editing.data.category ?? "")}
+                  onChange={(val) => updateData({ category: val })}
+                  suggestions={[
+                    ...new Set(
+                      items
+                        .filter(i => i.type === type)
+                        .map((item) => String(item.data.category ?? ""))
+                        .filter(Boolean)
+                    ),
+                  ]}
+                />
+              </label>
+            )}
           </div>
           {type === "project" && (
             <div className="cover-field">
@@ -857,38 +980,51 @@ function ContentManager({
               )}
             </div>
           )}
+          {type !== "social" && (
+            <label>
+              Résumé
+              <textarea
+                value={String(editing.data.description ?? "")}
+                onChange={(event) =>
+                  updateData({ description: event.target.value })
+                }
+                rows={4}
+              />
+            </label>
+          )}
           <label>
-            Résumé
-            <textarea
-              value={String(editing.data.description ?? "")}
-              onChange={(event) =>
-                updateData({ description: event.target.value })
-              }
-              rows={4}
-            />
-          </label>
-          <label>
-            Contexte / détails
+            {type === "social" ? "Lien URL" : "Contexte / détails"}
             <textarea
               value={String(editing.data.context ?? "")}
               onChange={(event) => updateData({ context: event.target.value })}
               rows={4}
             />
           </label>
-          <label>
-            Technologies
-            <input
-              value={technologiesValue}
-              onChange={(event) =>
-                updateData({
-                  technologies: event.target.value
-                    .split(",")
-                    .map((item) => item.trim())
-                    .filter(Boolean),
-                })
-              }
-            />
-          </label>
+          {type === "project" && (
+            <label>
+              Technologies
+              <MultiCombobox
+                values={technologiesValue}
+                onChange={(val) => updateData({ technologies: val })}
+                suggestions={[
+                  ...new Set(
+                    items.filter(i => i.type === "technology").map(i => i.title)
+                  )
+                ]}
+                onCreateNew={(name) => {
+                  setNestedEditing({
+                    id: 0,
+                    type: "technology",
+                    title: name,
+                    data: {},
+                    published: true,
+                    visible: true,
+                    sortOrder: items.filter(i => i.type === "technology").length,
+                  });
+                }}
+              />
+            </label>
+          )}
           <div className="check-row">
             <label>
               <input
@@ -974,6 +1110,57 @@ function ContentManager({
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {nestedEditing !== null && (
+        <div className="sidebar-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <form className="editor-panel" style={{ width: 600, maxWidth: '90%', margin: 0, position: 'relative', animation: 'fadeIn 0.2s ease-out' }} onSubmit={saveNested}>
+            <div className="editor-heading">
+              <div>
+                <span className="admin-eyebrow">Nouvelle technologie</span>
+                <h3>Ajouter {nestedEditing.title}</h3>
+              </div>
+              <button type="button" className="icon-button" onClick={() => setNestedEditing(null)}><X size={17} /></button>
+            </div>
+            <label>
+              Titre
+              <input
+                value={nestedEditing.title}
+                onChange={(e) => setNestedEditing({ ...nestedEditing, title: e.target.value })}
+                required
+              />
+            </label>
+            <div className="two-fields">
+              <label>
+                Ordre
+                <input
+                  type="number"
+                  value={nestedEditing.sortOrder}
+                  onChange={(e) => setNestedEditing({ ...nestedEditing, sortOrder: Number(e.target.value) })}
+                />
+              </label>
+              <label>
+                Catégorie / niveau
+                <CategoryCombobox
+                  value={String(nestedEditing.data.category ?? "")}
+                  onChange={(val) => setNestedEditing({ ...nestedEditing, data: { ...nestedEditing.data, category: val } })}
+                  suggestions={[...new Set(items.filter(i => i.type === "technology").map((item) => String(item.data.category ?? "")).filter(Boolean))]}
+                />
+              </label>
+            </div>
+            <label>
+              Résumé
+              <textarea
+                value={String(nestedEditing.data.description ?? "")}
+                onChange={(e) => setNestedEditing({ ...nestedEditing, data: { ...nestedEditing.data, description: e.target.value } })}
+                rows={3}
+              />
+            </label>
+            <button className="admin-button" type="submit">
+              <Save size={16} /> Créer et ajouter
+            </button>
+          </form>
         </div>
       )}
     </section>
