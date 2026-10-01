@@ -155,7 +155,7 @@ function Login({ onLogin }: { onLogin: () => void }) {
 
 type ChatMessage = { role: "user" | "assistant"; text: string; isError?: boolean };
 
-function AiChatBubble({ setNotice }: { setNotice: (msg: string) => void }) {
+function AiChatBubble({ setNotice, onContentChanged }: { setNotice: (msg: string) => void; onContentChanged?: () => void }) {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [thinking, setThinking] = useState(false);
@@ -201,10 +201,25 @@ function AiChatBubble({ setNotice }: { setNotice: (msg: string) => void }) {
         body: JSON.stringify({ messages: history }),
       });
 
+      const responseText = response?.message?.text || "Traitement terminé.";
+
+      // Detect if tools were executed (content created/updated)
+      const toolsExecuted: string[] = (response?.steps ?? []).flatMap(
+        (step: any) => (step.toolCalls ?? []).map((tc: any) => tc.toolName as string)
+      );
+      const didCreateOrUpdate = toolsExecuted.some(t =>
+        t === "createContent" || t === "updateContent"
+      );
+
       setMessages(prev => [...prev, {
         role: "assistant",
-        text: response?.message?.text || "Réponse vide reçue.",
+        text: responseText,
       }]);
+
+      if (didCreateOrUpdate) {
+        onContentChanged?.();
+        setNotice("Contenu mis à jour par l'IA. La liste a été rechargée.");
+      }
     } catch (err) {
       const errMsg = err instanceof Error ? err.message : "Erreur de connexion.";
       setMessages(prev => [...prev, {
@@ -353,7 +368,16 @@ function AdminApp() {
   };
   return (
     <div className="admin-app">
-      <AiChatBubble setNotice={setNotice} />
+      <AiChatBubble setNotice={setNotice} onContentChanged={() => {
+        // Recharge la liste en arrière-plan quand l'IA crée/modifie du contenu
+        if (section === "content") {
+          setLoadingItems(true);
+          void request(`/admin/items?type=${contentType}`)
+            .then(setItems)
+            .finally(() => setLoadingItems(false));
+        }
+        void refresh(); // Met à jour les compteurs dashboard
+      }} />
       {/* Overlay mobile pour fermer la sidebar en cliquant à côté */}
       {mobileOpen && (
         <div

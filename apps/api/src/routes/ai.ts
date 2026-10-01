@@ -84,15 +84,16 @@ router.post("/chat", requireAdmin, async (req: any, res: any, next: any) => {
     if (!finalText) {
       const toolResults: string[] = [];
       for (const step of steps) {
-        for (const part of step.toolResults ?? []) {
-          if (typeof part.result === "string") {
-            toolResults.push(part.result);
+        for (const part of (step.toolResults ?? []) as any[]) {
+          const r = part?.result;
+          if (r !== undefined && r !== null) {
+            toolResults.push(typeof r === "string" ? r : JSON.stringify(r));
           }
         }
       }
       finalText = toolResults.length > 0
         ? toolResults.join("\n")
-        : "Action effectuée.";
+        : "Traitement terminé.";
     }
 
     res.json({ 
