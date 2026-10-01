@@ -1,4 +1,4 @@
-import {
+import React, {
   useEffect,
   useState,
   type Dispatch,
@@ -567,6 +567,77 @@ function Dashboard({
   );
 }
 
+
+function CategoryCombobox({
+  value,
+  onChange,
+  suggestions,
+}: {
+  value: string;
+  onChange: (val: string) => void;
+  suggestions: string[];
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState(value);
+  const ref = React.useRef<HTMLDivElement>(null);
+
+  // Sync external value to query when value changes (e.g. editing a different item)
+  React.useEffect(() => { setQuery(value); }, [value]);
+
+  // Close on outside click
+  React.useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const filtered = query
+    ? suggestions.filter((s) => s.toLowerCase().includes(query.toLowerCase()))
+    : suggestions;
+
+  const select = (cat: string) => {
+    setQuery(cat);
+    onChange(cat);
+    setOpen(false);
+  };
+
+  return (
+    <div ref={ref} className="combobox-wrap">
+      <input
+        className="combobox-input"
+        value={query}
+        placeholder="Choisir ou créer..."
+        onChange={(e) => {
+          setQuery(e.target.value);
+          onChange(e.target.value);
+          setOpen(true);
+        }}
+        onFocus={() => setOpen(true)}
+      />
+      {open && (filtered.length > 0 || (query && !suggestions.includes(query))) && (
+        <ul className="combobox-list">
+          {filtered.map((cat) => (
+            <li
+              key={cat}
+              className={`combobox-option${cat === value ? " is-selected" : ""}`}
+              onMouseDown={() => select(cat)}
+            >
+              {cat}
+            </li>
+          ))}
+          {query && !filtered.includes(query) && (
+            <li className="combobox-option combobox-create" onMouseDown={() => select(query)}>
+              <Plus size={13} /> Créer «&nbsp;{query}&nbsp;»
+            </li>
+          )}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 function ContentManager({
   type,
   setType,
@@ -723,11 +794,16 @@ function ContentManager({
             </label>
             <label>
               Catégorie / niveau
-              <input
+              <CategoryCombobox
                 value={String(editing.data.category ?? "")}
-                onChange={(event) =>
-                  updateData({ category: event.target.value })
-                }
+                onChange={(val) => updateData({ category: val })}
+                suggestions={[
+                  ...new Set(
+                    items
+                      .map((item) => String(item.data.category ?? ""))
+                      .filter(Boolean)
+                  ),
+                ]}
               />
             </label>
           </div>
