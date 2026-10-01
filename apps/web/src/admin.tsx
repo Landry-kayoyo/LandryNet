@@ -82,9 +82,11 @@ function Login({ onLogin }: { onLogin: () => void }) {
   const [email, setEmail] = useState("admin@localhost");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     setError("");
+    setLoading(true);
     try {
       await request("/admin/login", {
         method: "POST",
@@ -95,6 +97,8 @@ function Login({ onLogin }: { onLogin: () => void }) {
       setError(
         cause instanceof Error ? cause.message : "Connexion impossible.",
       );
+    } finally {
+      setLoading(false);
     }
   };
   return (
@@ -117,6 +121,7 @@ function Login({ onLogin }: { onLogin: () => void }) {
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               required
+              disabled={loading}
             />
           </label>
           <label>
@@ -126,11 +131,12 @@ function Login({ onLogin }: { onLogin: () => void }) {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               required
+              disabled={loading}
             />
           </label>
           {error && <div className="admin-error">{error}</div>}
-          <button className="admin-button" type="submit">
-            Ouvrir la session <ShieldCheck size={16} />
+          <button className="admin-button" type="submit" disabled={loading}>
+            {loading ? "Connexion..." : "Ouvrir la session"} <ShieldCheck size={16} />
           </button>
         </form>
         <small>Accès réservé à l’administration du portfolio.</small>
