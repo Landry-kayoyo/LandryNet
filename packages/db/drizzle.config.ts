@@ -8,17 +8,18 @@ for (const envFile of [".env.vercel.local", ".env.production", ".env.local", ".e
   try {
     process.loadEnvFile(resolve(repoRoot, envFile));
   } catch {
-    // Ignore missing env files; they are optional in local development and CI.
+    // Ignore missing env files.
   }
 }
 
 const databaseUrl = process.env.POSTGRES_URL ?? process.env.DATABASE_URL ?? process.env.NEON_DATABASE_URL;
-const driver = process.env.DB_DRIVER ?? (databaseUrl ? "postgres" : "sqlite");
+
+if (!databaseUrl) {
+  throw new Error("DATABASE_URL (or POSTGRES_URL / NEON_DATABASE_URL) is required.");
+}
 
 export default defineConfig({
-  schema: driver === "postgres" ? "./src/schema/postgres.ts" : "./src/schema/sqlite.ts",
-  dialect: driver === "postgres" ? "postgresql" : "sqlite",
-  dbCredentials: driver === "postgres"
-    ? { url: databaseUrl ?? "" }
-    : { url: process.env.SQLITE_PATH ?? "./data/landry-net.sqlite" },
+  schema: "./src/schema/postgres.ts",
+  dialect: "postgresql",
+  dbCredentials: { url: databaseUrl },
 });

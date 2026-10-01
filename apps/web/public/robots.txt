@@ -1,4 +1,6 @@
 User-agent: *
 Allow: /
+Disallow: /admin/
+Disallow: /admin
 
 Sitemap: https://landrynet.vercel.app/sitemap.xml
