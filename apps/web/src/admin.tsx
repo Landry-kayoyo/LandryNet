@@ -477,11 +477,7 @@ function AdminApp() {
           />
         )}
         {section === "ai-settings" && (
-          <SingletonEditor
-            endpoint="ai-settings"
-            title="Configuration de l'Assistant IA"
-            setNotice={setNotice}
-          />
+          <AiSettingsEditor setNotice={setNotice} />
         )}
         {section === "messages" && (
           <Messages
@@ -1348,6 +1344,154 @@ function ContentManager({
           </form>
         </div>
       )}
+    </section>
+  );
+}
+
+function AiSettingsEditor({ setNotice }: { setNotice: (msg: string) => void }) {
+  const [data, setData] = useState<Record<string, any>>({
+    active_model: "gemini-2.5-flash",
+    api_key_gemini: "",
+    api_key_deepseek: "",
+    api_key_openai: "",
+    system_prompt: "Tu es l'assistant de Landry Kayoyo, un développeur Full-Stack d'élite.",
+    seo_rules: "Chaque description doit faire 120-160 caractères. Utilise des mots clés tech."
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    request("/admin/ai-settings")
+      .then((res) => {
+        if (res && Object.keys(res).length > 0) setData(prev => ({ ...prev, ...res }));
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await request("/admin/ai-settings", {
+        method: "PUT",
+        body: JSON.stringify(data),
+      });
+      setNotice("Configuration IA enregistrée avec succès !");
+    } catch {
+      setNotice("Erreur lors de l'enregistrement de l'IA.");
+    }
+  };
+
+  if (loading) {
+    return (
+      <section className="admin-content">
+        <div className="editor-panel singleton" style={{ opacity: 0.7 }}>
+          <span className="login-status-dot" style={{ display: 'inline-block', marginRight: 8, width: 10, height: 10 }} />
+          Chargement de la configuration...
+        </div>
+      </section>
+    );
+  }
+
+  const activeModelStr = String(data.active_model || "");
+
+  return (
+    <section className="admin-content">
+      <form className="editor-panel singleton" onSubmit={save}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div>
+            <span className="admin-eyebrow" style={{ color: "var(--admin-blue)" }}>Système Privé</span>
+            <h3>Configuration de l'Assistant IA</h3>
+          </div>
+          <Sparkles size={24} style={{ color: "var(--admin-blue)", opacity: 0.5 }} />
+        </div>
+        <p style={{ color: "var(--admin-muted)" }}>
+          Ces clés et instructions restent strictement confidentielles sur le serveur (Table admin_settings). 
+          Personne ne peut y accéder publiquement.
+        </p>
+        
+        <div style={{ display: "grid", gap: "20px", marginTop: "24px" }}>
+          <label>
+            Modèle IA actif
+            <select
+              value={activeModelStr}
+              onChange={e => setData({ ...data, active_model: e.target.value })}
+              style={{ width: "100%", padding: "10px", marginTop: "6px", background: "rgba(0,0,0,0.2)", border: "1px solid var(--admin-line)", color: "white", borderRadius: "8px", fontFamily: "inherit" }}
+            >
+              <option value="gemini-2.5-flash">Google Gemini 2.5 Flash (Gratuit / Rapide)</option>
+              <option value="gemini-2.5-pro">Google Gemini 2.5 Pro (Puissant)</option>
+              <option value="deepseek-chat">DeepSeek Chat (Alternative ChatGPT)</option>
+              <option value="deepseek-reasoner">DeepSeek Reasoner (Complexe)</option>
+              <option value="gpt-4o-mini">OpenAI GPT-4o Mini</option>
+              <option value="gpt-4o">OpenAI GPT-4o</option>
+            </select>
+          </label>
+
+          {activeModelStr.includes("gemini") && (
+            <label>
+              Clé API Google Gemini <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" style={{ fontSize: '0.8rem', color: 'var(--admin-lime)', marginLeft: 8 }}>Obtenir une clé gratuite ↗</a>
+              <input
+                type="password"
+                placeholder="AIzaSy..."
+                value={String(data.api_key_gemini || "")}
+                onChange={e => setData({ ...data, api_key_gemini: e.target.value })}
+              />
+            </label>
+          )}
+
+          {activeModelStr.includes("deepseek") && (
+            <label>
+              Clé API DeepSeek <a href="https://platform.deepseek.com/" target="_blank" rel="noreferrer" style={{ fontSize: '0.8rem', color: 'var(--admin-lime)', marginLeft: 8 }}>Plateforme ↗</a>
+              <input
+                type="password"
+                placeholder="sk-..."
+                value={String(data.api_key_deepseek || "")}
+                onChange={e => setData({ ...data, api_key_deepseek: e.target.value })}
+              />
+            </label>
+          )}
+
+          {activeModelStr.includes("gpt") && (
+            <label>
+              Clé API OpenAI <a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer" style={{ fontSize: '0.8rem', color: 'var(--admin-lime)', marginLeft: 8 }}>Plateforme ↗</a>
+              <input
+                type="password"
+                placeholder="sk-..."
+                value={String(data.api_key_openai || "")}
+                onChange={e => setData({ ...data, api_key_openai: e.target.value })}
+              />
+            </label>
+          )}
+
+          <hr style={{ border: 0, borderTop: "1px solid var(--admin-line)", margin: "10px 0" }} />
+
+          <label>
+            System Prompt (Personnalité & Objectifs de l'IA)
+            <textarea
+              value={String(data.system_prompt || "")}
+              onChange={e => setData({ ...data, system_prompt: e.target.value })}
+              rows={6}
+              placeholder="Ex: Tu es l'assistant de Landry..."
+              style={{ width: "100%", padding: "10px", marginTop: "6px", background: "rgba(0,0,0,0.2)", border: "1px solid var(--admin-line)", color: "white", borderRadius: "8px", resize: "vertical", fontFamily: "inherit" }}
+            />
+          </label>
+
+          <label>
+            Règles de style et SEO
+            <textarea
+              value={String(data.seo_rules || "")}
+              onChange={e => setData({ ...data, seo_rules: e.target.value })}
+              rows={4}
+              placeholder="Ex: 1. Les titres doivent faire moins de 60 caractères..."
+              style={{ width: "100%", padding: "10px", marginTop: "6px", background: "rgba(0,0,0,0.2)", border: "1px solid var(--admin-line)", color: "white", borderRadius: "8px", resize: "vertical", fontFamily: "inherit" }}
+            />
+          </label>
+        </div>
+        
+        <button className="admin-button" type="submit" style={{ marginTop: "24px", alignSelf: "flex-start", background: "var(--admin-blue)" }}>
+          <Save size={16} /> Enregistrer la configuration
+        </button>
+      </form>
     </section>
   );
 }
