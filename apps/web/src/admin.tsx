@@ -1392,7 +1392,7 @@ function ContentManager({
 
 function AiSettingsEditor({ setNotice }: { setNotice: (msg: string) => void }) {
   const [data, setData] = useState<Record<string, any>>({
-    active_model: "gemini-2.0-flash",
+    active_model: "gemini-3.8-flash",
     api_key_gemini: "",
     api_key_deepseek: "",
     api_key_openai: "",
@@ -1460,8 +1460,8 @@ function AiSettingsEditor({ setNotice }: { setNotice: (msg: string) => void }) {
               onChange={e => setData({ ...data, active_model: e.target.value })}
               style={{ width: "100%", padding: "10px", marginTop: "6px", background: "rgba(0,0,0,0.2)", border: "1px solid var(--admin-line)", color: "white", borderRadius: "8px", fontFamily: "inherit" }}
             >
-              <option value="gemini-2.0-flash">Google Gemini 2.0 Flash (Gratuit / Rapide)</option>
-              <option value="gemini-1.5-pro">Google Gemini 1.5 Pro (Puissant)</option>
+              <option value="gemini-3.8-flash">Google Gemini 3.8 Flash (Gratuit / Rapide)</option>
+              <option value="gemini-3.8-pro">Google Gemini 3.8 Pro (Puissant)</option>
               <option value="deepseek-chat">DeepSeek Chat (Alternative ChatGPT)</option>
               <option value="deepseek-reasoner">DeepSeek Reasoner (Complexe)</option>
               <option value="gpt-4o-mini">OpenAI GPT-4o Mini</option>

@@ -19,7 +19,7 @@ router.post("/chat", requireAdmin, async (req: any, res: any, next: any) => {
     const settings = await getSingleton("admin_settings");
     
     // Default model/provider resolution
-    const providerStr = String(settings.active_model || "gemini-2.0-flash").toLowerCase();
+    const providerStr = String(settings.active_model || "gemini-3.8-flash").toLowerCase();
     
     let aiModel;
     if (providerStr.includes("gemini")) {
