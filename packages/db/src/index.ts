@@ -286,7 +286,7 @@ export async function getPublicCmsData() {
   };
 }
 
-async function getSingleton(table: "site_profile" | "site_settings") {
+export async function getSingleton(table: "site_profile" | "site_settings") {
   const pg = await getPool();
   const row = (await pg.query(`SELECT data FROM ${table} WHERE id = 1`)).rows[0] as
     | { data: Record<string, unknown> }

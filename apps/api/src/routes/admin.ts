@@ -20,6 +20,7 @@ import {
   markContactMessageRead,
   updateCmsItem,
   updateSingleton,
+  getSingleton,
 } from "@workspace/db";
 
 const scrypt = promisify(scryptCallback);
@@ -27,6 +28,37 @@ const router = Router();
 const SESSION_COOKIE = "landry_admin_session";
 const SESSION_DAYS = 7;
 const uploadDirectory = process.env.VERCEL ? "/tmp/uploads" : resolve(process.cwd(), "uploads");
+
+// Rate limiter simple en mémoire (anti brute-force)
+const loginAttempts = new Map<string, { count: number; resetAt: number }>();
+const MAX_ATTEMPTS = 5;
+const WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+
+function checkRateLimit(ip: string): { blocked: boolean; remaining: number } {
+  const now = Date.now();
+  const entry = loginAttempts.get(ip);
+  if (!entry || now > entry.resetAt) {
+    loginAttempts.set(ip, { count: 0, resetAt: now + WINDOW_MS });
+    return { blocked: false, remaining: MAX_ATTEMPTS };
+  }
+  if (entry.count >= MAX_ATTEMPTS) return { blocked: true, remaining: 0 };
+  return { blocked: false, remaining: MAX_ATTEMPTS - entry.count };
+}
+
+function recordFailedAttempt(ip: string) {
+  const now = Date.now();
+  const entry = loginAttempts.get(ip);
+  if (!entry || now > entry.resetAt) {
+    loginAttempts.set(ip, { count: 1, resetAt: now + WINDOW_MS });
+  } else {
+    entry.count += 1;
+  }
+}
+
+function clearAttempts(ip: string) {
+  loginAttempts.delete(ip);
+}
+
 
 void ensureConfiguredAdminUser();
 mkdirSync(uploadDirectory, { recursive: true });
@@ -94,6 +126,14 @@ async function requireAdmin(req: any, res: any, next: any) {
 
 router.post("/login", async (req: any, res: any, next: any) => {
   try {
+    const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown") as string;
+    const rateLimit = checkRateLimit(ip);
+    
+    if (rateLimit.blocked) {
+      res.status(429).json({ error: "Trop de tentatives de connexion échouées. Veuillez patienter 15 minutes." });
+      return;
+    }
+
     if (!db) {
       res.status(503).json({ error: "La base de données n’est pas disponible pour l’authentification." });
       return;
@@ -105,6 +145,7 @@ router.post("/login", async (req: any, res: any, next: any) => {
     const configuredPassword = process.env.ADMIN_PASSWORD ?? "landry-local-change-me";
     const hasConfiguredAdminCredentials = Boolean(process.env.ADMIN_EMAIL?.trim()) && Boolean(process.env.ADMIN_PASSWORD?.trim());
     if (!email || !password || email.length > 160 || password.length > 200) {
+      recordFailedAttempt(ip);
       res.status(400).json({ error: "E-mail et mot de passe requis." });
       return;
     }
@@ -128,10 +169,12 @@ router.post("/login", async (req: any, res: any, next: any) => {
     }
 
     if (!user || !(await verifyPassword(password, user.passwordHash))) {
+      recordFailedAttempt(ip);
       res.status(401).json({ error: "Identifiants invalides." });
       return;
     }
 
+    clearAttempts(ip);
     const token = randomBytes(32).toString("hex");
     await createAdminSession(tokenHash(token), user.id, Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000);
     res.cookie(SESSION_COOKIE, token, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", maxAge: SESSION_DAYS * 24 * 60 * 60 * 1000, path: "/" });
@@ -291,7 +334,10 @@ router.delete("/items/:id", requireAdmin, async (req: any, res: any, next: any) 
  } catch (error) { next(error); }
 });
 
+router.get("/profile", requireAdmin, async (_req: any, res: any, next: any) => { try { const row = await getSingleton("site_profile"); res.json(row?.data ?? {}); } catch (error) { next(error); } });
 router.put("/profile", requireAdmin, async (req: any, res: any, next: any) => { try { await updateSingleton("site_profile", req.body ?? {}); res.json({ status: "updated" }); } catch (error) { next(error); } });
+
+router.get("/settings", requireAdmin, async (_req: any, res: any, next: any) => { try { const row = await getSingleton("site_settings"); res.json(row?.data ?? {}); } catch (error) { next(error); } });
 router.put("/settings", requireAdmin, async (req: any, res: any, next: any) => { try { await updateSingleton("site_settings", req.body ?? {}); res.json({ status: "updated" }); } catch (error) { next(error); } });
 
 router.get("/messages", requireAdmin, async (req: any, res: any, next: any) => {

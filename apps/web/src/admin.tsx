@@ -147,6 +147,7 @@ function Login({ onLogin }: { onLogin: () => void }) {
 
 function AdminApp() {
   const [authenticated, setAuthenticated] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const [section, setSection] = useState<
     "dashboard" | "content" | "profile" | "messages" | "settings"
   >("dashboard");
@@ -166,6 +167,8 @@ function AdminApp() {
       setCounts(dashboard.counts);
     } catch {
       setAuthenticated(false);
+    } finally {
+      setCheckingAuth(false);
     }
   };
   useEffect(() => {
@@ -180,6 +183,13 @@ function AdminApp() {
       void request("/admin/messages").then(setMessages);
   }, [authenticated, section]);
 
+  if (checkingAuth) {
+    return (
+      <div className="admin-login" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="login-status-dot" style={{ width: 16, height: 16, animationDuration: '1s' }} />
+      </div>
+    );
+  }
   if (!authenticated) return <Login onLogin={() => void refresh()} />;
   const logout = async () => {
     await request("/admin/logout", { method: "POST" });
@@ -869,30 +879,111 @@ function SingletonEditor({
   title: string;
   setNotice: (notice: string) => void;
 }) {
-  const [value, setValue] = useState("{}");
+  const [data, setData] = useState<Record<string, any>>({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    request(`/admin/${endpoint}`)
+      .then((res) => setData(res || {}))
+      .catch(() => setData({}))
+      .finally(() => setLoading(false));
+  }, [endpoint]);
+
   const save = async () => {
     try {
-      await request(`/admin/${endpoint}`, { method: "PUT", body: value });
-      setNotice("Paramètres enregistrés.");
+      await request(`/admin/${endpoint}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      });
+      setNotice("Paramètres enregistrés avec succès.");
     } catch {
-      setNotice("JSON invalide ou enregistrement impossible.");
+      setNotice("Erreur lors de l'enregistrement.");
     }
   };
+
+  const updateField = (key: string, value: string | boolean | number) => {
+    setData((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const deleteField = (key: string) => {
+    setData((prev) => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  };
+
+  const addField = () => {
+    const key = prompt("Nom du nouveau champ (ex: bio, title) :");
+    if (key && !data[key]) {
+      setData((prev) => ({ ...prev, [key]: "" }));
+    }
+  };
+
+  if (loading) {
+    return (
+      <section className="admin-content">
+        <div className="editor-panel singleton" style={{ opacity: 0.7 }}>
+          Chargement des données...
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="admin-content">
       <div className="editor-panel singleton">
-        <span className="admin-eyebrow">Source publique</span>
-        <h3>{title}</h3>
-        <p>
-          Ces données seront disponibles pour le portfolio public. Laissez vide
-          ce qui n’est pas confirmé.
-        </p>
-        <textarea
-          value={value}
-          onChange={(event) => setValue(event.target.value)}
-          rows={18}
-        />
-        <button className="admin-button" onClick={() => void save()}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div>
+            <span className="admin-eyebrow">Source publique</span>
+            <h3>{title}</h3>
+          </div>
+          <button className="text-button" onClick={addField}>+ Ajouter un champ</button>
+        </div>
+        <p>Ces données seront disponibles pour le portfolio public.</p>
+        
+        <div style={{ display: "grid", gap: "16px", marginTop: "16px" }}>
+          {Object.entries(data).map(([key, val]) => (
+            <div key={key} style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
+              <label style={{ flex: 1 }}>
+                <span style={{ color: "var(--admin-lime)", fontFamily: "Space Mono", fontSize: ".7rem", textTransform: "uppercase" }}>{key}</span>
+                {typeof val === "boolean" ? (
+                  <select
+                    value={val ? "true" : "false"}
+                    onChange={(e) => updateField(key, e.target.value === "true")}
+                    style={{ width: "100%", padding: "10px", marginTop: "6px", background: "rgba(0,0,0,0.2)", border: "1px solid var(--admin-line)", color: "white", borderRadius: "8px" }}
+                  >
+                    <option value="true">Vrai (Oui)</option>
+                    <option value="false">Faux (Non)</option>
+                  </select>
+                ) : (
+                  <textarea
+                    value={String(val)}
+                    onChange={(e) => updateField(key, e.target.value)}
+                    rows={String(val).length > 60 ? 3 : 1}
+                    style={{ width: "100%", padding: "10px", marginTop: "6px", background: "rgba(0,0,0,0.2)", border: "1px solid var(--admin-line)", color: "white", borderRadius: "8px", resize: "vertical", fontFamily: "inherit" }}
+                  />
+                )}
+              </label>
+              <button
+                className="icon-button danger"
+                style={{ marginTop: "24px" }}
+                onClick={() => deleteField(key)}
+                title="Supprimer ce champ"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+          ))}
+          {Object.keys(data).length === 0 && (
+            <div style={{ color: "var(--admin-muted)", fontSize: ".85rem", padding: "20px 0" }}>
+              Aucun champ défini. Ajoutez-en un pour commencer.
+            </div>
+          )}
+        </div>
+        
+        <button className="admin-button" onClick={() => void save()} style={{ marginTop: "20px", alignSelf: "flex-start" }}>
           <Save size={16} /> Enregistrer
         </button>
       </div>
