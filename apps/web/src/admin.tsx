@@ -364,6 +364,7 @@ function AdminApp() {
   const [editing, setEditing] = useState<Item | null>(null);
   const [notice, setNotice] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [dashboardPeriod, setDashboardPeriod] = useState(6);
 
   const refresh = async () => {
     try {
@@ -530,7 +531,12 @@ function AdminApp() {
         </header>
         {notice && <div className="admin-notice">{notice}</div>}
         {section === "dashboard" && (
-          <Dashboard counts={counts} onMessages={() => nav("messages")} />
+          <Dashboard
+            counts={counts}
+            onMessages={() => nav("messages")}
+            onPeriodChange={setDashboardPeriod}
+            period={dashboardPeriod}
+          />
         )}
         {section === "content" && (
           <ContentManager

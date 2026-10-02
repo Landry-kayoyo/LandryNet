@@ -101,11 +101,27 @@ export function PublicationPage() {
 // ---------------------------------------------------------------------------
 export function AboutPage() {
   const data = usePublicCmsData();
+  const profile = data.profile ?? {};
+
+  const getProfileText = (...keys: string[]) => {
+    for (const key of keys) {
+      const value = profile[key];
+      if (typeof value === 'string' && value.trim().length > 0) {
+        return value.trim();
+      }
+    }
+    return '';
+  };
+
+  const profileName = getProfileText('name', 'fullName', 'displayName', 'full_name') || 'Landry Kayoyo';
+  const profileTitle = getProfileText('jobTitle', 'title', 'role', 'poste', 'position') || 'Administrateur systèmes et réseaux';
+  const profileDescription =
+    getProfileText('bio', 'about', 'description', 'summary', 'intro') ||
+    'Landry Kayoyo, sous la marque Landry Net, est administrateur systèmes et réseaux, spécialisé dans les infrastructures IT, la sécurité informatique, le monitoring, les réseaux et l’optimisation des services numériques.';
 
   useSeoMeta({
-    title: 'À propos | Landry Kayoyo',
-    description:
-      "Découvrez le profil et l\u2019approche de Landry Kayoyo en infrastructure IT, systèmes, réseaux et sécurité informatique.",
+    title: `À propos | ${profileName}`,
+    description: profileDescription,
     path: '/a-propos',
     image: profileImage,
     structuredData: {
@@ -113,10 +129,9 @@ export function AboutPage() {
       '@type': 'ProfilePage',
       mainEntity: {
         '@type': 'Person',
-        name: 'Landry Kayoyo',
-        jobTitle: 'Administrateur systèmes et réseaux',
-        description:
-          'Expert en infrastructure, sécurité, réseaux et observabilité pour des environnements critiques.',
+        name: profileName,
+        jobTitle: profileTitle,
+        description: profileDescription,
       },
     },
   });
@@ -171,19 +186,15 @@ export function AboutPage() {
         <div>
           <SectionKicker index="01">À propos de moi</SectionKicker>
           <h1>
-            Landry Kayoyo
+            {profileName}
             <br />
             <em>Landry Net.</em>
           </h1>
-          <p>
-            Landry Kayoyo, sous la marque Landry Net, est administrateur systèmes et réseaux,
-            spécialisé dans les infrastructures IT, la sécurité informatique, le monitoring, les
-            réseaux et l&apos;optimisation des services numériques.
-          </p>
+          <p>{profileDescription}</p>
         </div>
         <img
           src={profileImage}
-          alt="Portrait professionnel de Landry Kayoyo, expert en infrastructure IT, réseaux et sécurité informatique"
+          alt={`Portrait professionnel de ${profileName}, ${profileTitle}`}
           width="900"
           height="1200"
           fetchPriority="high"

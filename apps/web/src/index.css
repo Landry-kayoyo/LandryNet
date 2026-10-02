@@ -932,6 +932,7 @@
 
 .about-page-hero h1 {
   margin: 2rem 0 0;
+  color: var(--ink);
   font-family: var(--app-font-display);
   font-size: var(--text-5xl);
   letter-spacing: -.06em;
@@ -947,7 +948,7 @@
 .about-page-hero p {
   max-width: 560px;
   margin-top: 2.5rem;
-  color: rgba(13, 17, 24, .68);
+  color: #1f2937;
   font-size: 1.12rem;
   line-height: 1.75;
 }
@@ -979,6 +980,7 @@
 
 .about-page-content h2 {
   margin-top: 1.5rem;
+  color: var(--ink);
   font-family: var(--app-font-display);
   font-size: clamp(3rem, 6vw, 6rem);
   letter-spacing: -.1em;
@@ -993,7 +995,7 @@
 .about-page-content p {
   max-width: 560px;
   margin: 0 0 1.5rem;
-  color: rgba(13, 17, 24, .68);
+  color: #1f2937;
   font-size: 1rem;
   line-height: 1.8;
 }

@@ -116,8 +116,9 @@ body {
 .editor-heading { display: flex; justify-content: space-between; align-items: start; }
 .editor-heading h3, .singleton h3 { margin: 7px 0 0; font-family: 'DM Sans', sans-serif; font-size: 1.5rem; letter-spacing: -.03em; }
 .editor-panel label, .login-panel label { display: grid; gap: 8px; color: var(--admin-muted); font-size: .8rem; font-weight: 500; }
-.editor-panel input, .editor-panel textarea, .login-panel input, .singleton textarea { width: 100%; box-sizing: border-box; border: 1px solid var(--admin-line); padding: 12px 14px; outline: 0; background: rgba(0,0,0,0.2); color: var(--admin-ink); font: inherit; border-radius: 8px; transition: border-color 0.2s, box-shadow 0.2s; }
-.editor-panel input:focus, .editor-panel textarea:focus, .login-panel input:focus, .singleton textarea:focus { border-color: var(--admin-lime); box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15); }
+.editor-panel input, .editor-panel textarea, .login-panel input, .singleton textarea, .admin-app input, .admin-app textarea, .admin-app select { width: 100%; box-sizing: border-box; border: 1px solid var(--admin-line); padding: 12px 14px; outline: 0; background: rgba(0,0,0,0.2); color: var(--admin-ink); font: inherit; border-radius: 8px; transition: border-color 0.2s, box-shadow 0.2s; }
+.editor-panel input:focus, .editor-panel textarea:focus, .login-panel input:focus, .singleton textarea:focus, .admin-app input:focus, .admin-app textarea:focus, .admin-app select:focus { border-color: var(--admin-lime); box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15); }
+.admin-app input::placeholder, .admin-app textarea::placeholder { color: var(--admin-muted); }
 .two-fields { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
 .check-row { display: flex; gap: 24px; }
 .check-row label { display: flex; align-items: center; gap: 8px; cursor: pointer; }

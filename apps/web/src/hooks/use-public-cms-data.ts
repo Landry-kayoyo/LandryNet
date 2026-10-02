@@ -9,6 +9,7 @@ export type PublicCmsItem = {
 };
 
 export type PublicCmsData = {
+  profile: Record<string, unknown>;
   skills: PublicCmsItem[];
   technologies: PublicCmsItem[];
   projects: PublicCmsItem[];
@@ -19,6 +20,7 @@ export type PublicCmsData = {
 
 export function usePublicCmsData(): PublicCmsData & { loading: boolean } {
   const [data, setData] = useState<PublicCmsData>({
+    profile: {},
     skills: [],
     technologies: [],
     projects: [],
