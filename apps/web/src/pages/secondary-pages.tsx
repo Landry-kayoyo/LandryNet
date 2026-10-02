@@ -107,7 +107,7 @@ export function AboutPage() {
     description:
       "Découvrez le profil et l\u2019approche de Landry Kayoyo en infrastructure IT, systèmes, réseaux et sécurité informatique.",
     path: '/a-propos',
-    image: defaultCover,
+    image: profileImage,
     structuredData: {
       '@context': 'https://schema.org',
       '@type': 'ProfilePage',

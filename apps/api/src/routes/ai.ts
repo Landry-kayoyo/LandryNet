@@ -43,7 +43,18 @@ router.post("/chat", requireAdmin, async (req: any, res: any, next: any) => {
     
     const sysPrompt = String(settings.system_prompt || "Tu es l'assistant de Landry. Tu as accès à son portfolio via des outils.");
     const seoRules = String(settings.seo_rules || "");
-    const finalSystem = `${sysPrompt}\n\nRègles à suivre (SEO, style) :\n${seoRules}\n\nContexte:\n${contextStr}`;
+    const finalSystem = `${sysPrompt}
+
+RÈGLES IMPORTANTES :
+1. N'ajoute PAS le contenu directement dans la base de données.
+2. Utilise toujours l'outil 'proposeContent' pour proposer une création à l'utilisateur.
+3. Il verra un bouton "Valider" dans son chat pour approuver et publier.
+
+Règles à suivre (SEO, style) :
+${seoRules}
+
+Contexte:
+${contextStr}`;
 
     const { text, steps } = await generateText({
       model: aiModel,
@@ -51,20 +62,19 @@ router.post("/chat", requireAdmin, async (req: any, res: any, next: any) => {
       messages,
       maxSteps: 5,
       tools: {
-        createContent: tool({
-          description: "Créer un nouveau contenu (projet, compétence, service, etc.). Fournis le plus de détails possible dans l'objet 'data' (category, description, technologies, coverImage, link, date, etc.).",
+        proposeContent: tool({
+          description: "Proposer la création d'un nouveau contenu. L'utilisateur aura un bouton pour valider.",
           parameters: z.object({
             type: z.enum(["project", "skill", "technology", "service", "timeline", "social"]),
             title: z.string(),
             data: z.record(z.any()),
           }),
-          execute: async ({ type, title, data }) => {
-            const id = await createCmsItem({ type, title, data, visible: false, published: false });
-            return `Le contenu '${title}' a été créé avec succès (ID: ${id}).`;
+          execute: async (args) => {
+            return { action: "PROPOSE_CREATE", ...args };
           }
         }),
         updateContent: tool({
-          description: "Mettre à jour un contenu existant. Modifie uniquement les champs nécessaires dans 'data'.",
+          description: "Mettre à jour un contenu existant.",
           parameters: z.object({
             id: z.number(),
             title: z.string().optional(),
@@ -78,26 +88,34 @@ router.post("/chat", requireAdmin, async (req: any, res: any, next: any) => {
       }
     });
 
-    // If the model only called tools without a follow-up text, reconstruct
-    // a response from tool results so the user always gets feedback.
     let finalText = text;
-    if (!finalText) {
-      const toolResults: string[] = [];
-      for (const step of steps) {
-        for (const part of (step.toolResults ?? []) as any[]) {
-          const r = part?.result;
-          if (r !== undefined && r !== null) {
-            toolResults.push(typeof r === "string" ? r : JSON.stringify(r));
+    const proposals: any[] = [];
+    
+    // If we have tool calls, parse them out
+    const toolResults: string[] = [];
+    for (const step of steps) {
+      for (const part of (step.toolResults ?? []) as any[]) {
+        const r = part?.result;
+        if (r !== undefined && r !== null) {
+          if (typeof r === "object" && r.action === "PROPOSE_CREATE") {
+             proposals.push(r);
+             toolResults.push(`Voici ma proposition pour : ${r.title}. Vous pouvez valider ci-dessous.`);
+          } else {
+             toolResults.push(typeof r === "string" ? r : JSON.stringify(r));
           }
         }
       }
-      finalText = toolResults.length > 0
-        ? toolResults.join("\n")
-        : "Traitement terminé.";
+    }
+    
+    if (!finalText && toolResults.length > 0) {
+      finalText = toolResults.join("\n");
+    } else if (!finalText) {
+      finalText = "Traitement terminé.";
     }
 
     res.json({ 
       message: { role: "assistant", text: finalText },
+      proposals,
       steps
     });
   } catch (err: any) {

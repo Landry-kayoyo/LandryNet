@@ -153,7 +153,7 @@ function Login({ onLogin }: { onLogin: () => void }) {
   );
 }
 
-type ChatMessage = { role: "user" | "assistant"; text: string; isError?: boolean };
+type ChatMessage = { role: "user" | "assistant"; text: string; isError?: boolean; proposals?: any[] };
 
 function AiChatBubble({ setNotice, onContentChanged }: { setNotice: (msg: string) => void; onContentChanged?: () => void }) {
   const [open, setOpen] = useState(false);
@@ -202,18 +202,18 @@ function AiChatBubble({ setNotice, onContentChanged }: { setNotice: (msg: string
       });
 
       const responseText = response?.message?.text || "Traitement terminé.";
+      const proposals = response?.proposals || [];
 
       // Detect if tools were executed (content created/updated)
       const toolsExecuted: string[] = (response?.steps ?? []).flatMap(
         (step: any) => (step.toolCalls ?? []).map((tc: any) => tc.toolName as string)
       );
-      const didCreateOrUpdate = toolsExecuted.some(t =>
-        t === "createContent" || t === "updateContent"
-      );
+      const didCreateOrUpdate = toolsExecuted.some(t => t === "updateContent");
 
       setMessages(prev => [...prev, {
         role: "assistant",
         text: responseText,
+        proposals
       }]);
 
       if (didCreateOrUpdate) {
@@ -238,6 +238,33 @@ function AiChatBubble({ setNotice, onContentChanged }: { setNotice: (msg: string
     localStorage.setItem("ai_chat_history", JSON.stringify(init));
   };
 
+  const handleValidateProposal = async (proposal: any) => {
+    try {
+      setThinking(true);
+      await request("/admin/items", {
+        method: "POST",
+        body: JSON.stringify({
+          type: proposal.type,
+          title: proposal.title,
+          data: proposal.data,
+          published: true,
+          visible: true
+        })
+      });
+      setNotice(`Le contenu '${proposal.title}' a été publié.`);
+      onContentChanged?.();
+      // Remove proposal from history so we don't click it again
+      setMessages(prev => prev.map(m => ({
+        ...m,
+        proposals: m.proposals?.filter(p => p !== proposal)
+      })));
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : "Erreur lors de la validation.");
+    } finally {
+      setThinking(false);
+    }
+  };
+
   return (
     <div className="ai-chat-container">
       {open && (
@@ -260,6 +287,18 @@ function AiChatBubble({ setNotice, onContentChanged }: { setNotice: (msg: string
             {messages.map((msg, i) => (
               <div key={i} className={`ai-msg ${msg.role}${msg.isError ? " error" : ""}`}>
                 {msg.text}
+                {msg.proposals?.map((p, j) => (
+                  <div key={j} style={{ marginTop: 10, padding: 10, background: "rgba(255,255,255,0.05)", borderRadius: 6, border: "1px solid rgba(255,255,255,0.1)" }}>
+                    <div style={{ fontWeight: 600, marginBottom: 5 }}>{p.title}</div>
+                    <div style={{ fontSize: "0.85em", opacity: 0.8, marginBottom: 10 }}>Type: {p.type}</div>
+                    <button 
+                      onClick={() => void handleValidateProposal(p)}
+                      style={{ background: "var(--admin-lime)", color: "black", border: "none", padding: "6px 12px", borderRadius: 4, cursor: "pointer", fontWeight: 600, fontSize: "0.9em" }}
+                    >
+                      Valider et publier
+                    </button>
+                  </div>
+                ))}
               </div>
             ))}
             {thinking && (
@@ -1424,6 +1463,25 @@ function AiSettingsEditor({ setNotice }: { setNotice: (msg: string) => void }) {
     }
   };
 
+  const [fetchedModels, setFetchedModels] = useState<string[]>([]);
+  const [loadingModels, setLoadingModels] = useState(false);
+
+  const fetchModels = async () => {
+    setLoadingModels(true);
+    try {
+      const res = await request("/admin/ai-models");
+      if (res && res.models) setFetchedModels(res.models);
+    } catch {
+      // Ignore
+    } finally {
+      setLoadingModels(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchModels();
+  }, []);
+
   if (loading) {
     return (
       <section className="admin-content">
@@ -1456,25 +1514,28 @@ function AiSettingsEditor({ setNotice }: { setNotice: (msg: string) => void }) {
           <label>
             Modèle IA actif
             <small style={{ display: 'block', color: 'var(--admin-muted)', marginTop: 4 }}>
-              Tu peux choisir dans la liste ou taper le nom exact du modèle.
+              Choisis le modèle à utiliser parmi ceux disponibles avec ta clé.
             </small>
-            <input
-              list="model-suggestions"
-              value={activeModelStr}
-              onChange={e => setData({ ...data, active_model: e.target.value })}
-              placeholder="ex: gemini-3.8-flash"
-              style={{ width: "100%", padding: "10px", marginTop: "6px", background: "rgba(0,0,0,0.2)", border: "1px solid var(--admin-line)", color: "white", borderRadius: "8px", fontFamily: "monospace" }}
-            />
-            <datalist id="model-suggestions">
-              <option value="gemini-3.8-flash" label="Google Gemini 3.8 Flash (Gratuit)" />
-              <option value="gemini-3.8-pro" label="Google Gemini 3.8 Pro" />
-              <option value="gemini-2.5-flash" label="Google Gemini 2.5 Flash" />
-              <option value="gemini-1.5-pro" label="Google Gemini 1.5 Pro" />
-              <option value="deepseek-chat" label="DeepSeek Chat" />
-              <option value="deepseek-reasoner" label="DeepSeek Reasoner" />
-              <option value="gpt-4o-mini" label="OpenAI GPT-4o Mini" />
-              <option value="gpt-4o" label="OpenAI GPT-4o" />
-            </datalist>
+            <div style={{ display: "flex", gap: "10px", marginTop: "6px" }}>
+              <select
+                value={activeModelStr}
+                onChange={e => setData({ ...data, active_model: e.target.value })}
+                style={{ flex: 1, padding: "10px", background: "rgba(0,0,0,0.2)", border: "1px solid var(--admin-line)", color: "white", borderRadius: "8px", fontFamily: "monospace", appearance: "auto" }}
+              >
+                <option value={activeModelStr}>{activeModelStr}</option>
+                {fetchedModels.filter(m => m !== activeModelStr).map(m => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
+              </select>
+              <button 
+                type="button" 
+                onClick={fetchModels}
+                disabled={loadingModels}
+                style={{ padding: "0 15px", background: "var(--admin-blue)", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", opacity: loadingModels ? 0.7 : 1 }}
+              >
+                {loadingModels ? "..." : "Actualiser"}
+              </button>
+            </div>
           </label>
 
           {activeModelStr.includes("gemini") && (

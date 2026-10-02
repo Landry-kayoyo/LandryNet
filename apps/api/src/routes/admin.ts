@@ -203,17 +203,15 @@ router.post("/upload", requireAdmin, upload.single("file"), async (req: any, res
 
   try {
     const originalPath = resolve(uploadDirectory, req.file.filename);
-    const optimizedName = `${req.file.filename}.webp`;
-    const optimizedPath = resolve(uploadDirectory, optimizedName);
-
-    await sharp(originalPath)
+    const buffer = await sharp(originalPath)
       .resize({ width: 1800, height: 1800, fit: "inside", withoutEnlargement: true })
       .webp({ quality: 74, effort: 6 })
-      .toFile(optimizedPath);
+      .toBuffer();
 
     unlinkSync(originalPath);
 
-    res.status(201).json({ url: `${req.protocol}://${req.get("host")}/api/uploads/${optimizedName}` });
+    const base64Url = `data:image/webp;base64,${buffer.toString("base64")}`;
+    res.status(201).json({ url: base64Url });
   } catch (error) {
     next(error);
   }
@@ -344,6 +342,47 @@ router.put("/settings", requireAdmin, async (req: any, res: any, next: any) => {
 
 router.get("/ai-settings", requireAdmin, async (_req: any, res: any, next: any) => { try { const row = await getSingleton("admin_settings"); res.json(row); } catch (error) { next(error); } });
 router.put("/ai-settings", requireAdmin, async (req: any, res: any, next: any) => { try { await updateSingleton("admin_settings", req.body ?? {}); res.json({ status: "updated" }); } catch (error) { next(error); } });
+
+router.get("/ai-models", requireAdmin, async (req: any, res: any, next: any) => {
+  try {
+    const settings = await getSingleton("admin_settings");
+    const providerStr = String(settings.active_model || "").toLowerCase();
+    const models: string[] = [];
+
+    if (providerStr.includes("gemini")) {
+      const key = String(settings.api_key_gemini || "");
+      if (key) {
+        const fetchRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
+        if (fetchRes.ok) {
+          const data = await fetchRes.json();
+          const list = data.models || [];
+          list.forEach((m: any) => {
+            if (m.supportedGenerationMethods?.includes("generateContent")) {
+              models.push(m.name.replace("models/", ""));
+            }
+          });
+        }
+      }
+    } else if (providerStr.includes("deepseek") || providerStr.includes("gpt")) {
+      const isDeepseek = providerStr.includes("deepseek");
+      const key = String(isDeepseek ? settings.api_key_deepseek : settings.api_key_openai);
+      const baseUrl = isDeepseek ? "https://api.deepseek.com/v1" : "https://api.openai.com/v1";
+      if (key) {
+        const fetchRes = await fetch(`${baseUrl}/models`, {
+          headers: { Authorization: `Bearer ${key}` }
+        });
+        if (fetchRes.ok) {
+          const data = await fetchRes.json();
+          (data.data || []).forEach((m: any) => models.push(m.id));
+        }
+      }
+    }
+    
+    res.json({ models });
+  } catch (error) {
+    next(error);
+  }
+});
 
 router.get("/messages", requireAdmin, async (req: any, res: any, next: any) => {
  try {

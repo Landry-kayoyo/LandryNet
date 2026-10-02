@@ -214,51 +214,69 @@ export default function Home() {
           >
             {menuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
-
-          <AnimatePresence>
-            {menuOpen && (
-              <motion.div
-                className="mobile-menu-backdrop"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.18 }}
-                onClick={closeMenu}
-              >
-                <motion.div
-                  className="mobile-menu"
-                  initial={{ opacity: 0, y: -12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -12 }}
-                  transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div className="mobile-menu-top">
-                    <span>Navigation</span>
-                    <span>LK / 01</span>
-                  </div>
-                  <nav aria-label="Navigation mobile">
-                    {[...navItems, { label: 'Contact', href: '#contact' }].map((item, index) => (
-                      <a
-                        key={item.href}
-                        href={item.href}
-                        onClick={closeMenu}
-                        data-testid={`link-mobile-${index}`}
-                      >
-                        <span>0{index + 1}</span>
-                        {item.label}
-                        <ArrowUpRight size={18} />
-                      </a>
-                    ))}
-                  </nav>
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
       </header>
 
+      {/* ── Mobile Menu (outside header to avoid backdrop-filter stacking context) ── */}
+      <AnimatePresence>
+        {menuOpen && (
+          <>
+
+                <motion.div
+                  className="mobile-menu-backdrop"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  onClick={closeMenu}
+                />
+                <motion.div
+                  className="mobile-menu"
+                  initial={{ opacity: 0, x: -40 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -40 }}
+                  transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  <div className="mobile-menu-header">
+                    <a href="#top" className="brand-lockup" onClick={closeMenu}>
+                      <span className="brand-logo">
+                        <img src={brandLogo} alt="Logo Landry Net" />
+                      </span>
+                      <span className="brand-wordmark">LANDRY NET</span>
+                    </a>
+                    <button type="button" className="mobile-menu-close" onClick={closeMenu} aria-label="Fermer le menu">
+                      <X size={18} />
+                    </button>
+                  </div>
+                  <div className="mobile-menu-body">
+                    <div className="mobile-menu-label">Navigation</div>
+                    <nav aria-label="Navigation mobile">
+                      {[...navItems, { label: 'Contact', href: '#contact' }].map((item, index) => (
+                        <a
+                          key={item.href}
+                          href={item.href}
+                          onClick={closeMenu}
+                          data-testid={`link-mobile-${index}`}
+                        >
+                          <span>0{index + 1}</span>
+                          {item.label}
+                          <ArrowUpRight size={20} />
+                        </a>
+                      ))}
+                    </nav>
+                    <div className="mobile-menu-footer">
+                      <a href="#contact" className="mobile-menu-cta" onClick={closeMenu}>
+                        Parlons projet <ArrowUpRight size={16} />
+                      </a>
+                    </div>
+                  </div>
+                </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
       <main id="top">
+
         {/* ── Hero ── */}
         <section className="hero" aria-labelledby="hero-title">
           <div className="hero-grid-lines" aria-hidden="true" />
