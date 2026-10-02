@@ -51,7 +51,7 @@ export function PublicationPage() {
 
       <section className="publication-page-hero">
         <img
-          className="publication-page-cover"
+          className={`publication-page-cover${typeof project.data.coverImage === 'string' && project.data.coverImage ? '' : ' is-placeholder-cover'}`}
           src={
             typeof project.data.coverImage === 'string' && project.data.coverImage
               ? project.data.coverImage

@@ -8,10 +8,10 @@ import field02MethodImage from '@assets/optimized/field-02-method.webp';
 import field03HandshakeImage from '@assets/optimized/field-03-handshake.webp';
 
 export const navItems = [
-  { label: 'À propos', href: '#about' },
+  { label: 'À propos', href: '/a-propos' },
   { label: 'Expertise', href: '#expertise' },
   { label: 'Services', href: '/services' },
-  { label: 'Publications', href: '#publications' },
+  { label: 'Publications', href: '/projets' },
   { label: 'Terrain', href: '#terrain' },
   { label: 'Parcours', href: '#parcours' },
 ];

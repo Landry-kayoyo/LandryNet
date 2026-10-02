@@ -108,6 +108,11 @@ export default function Home() {
     .slice()
     .sort((a, b) => b.id - a.id)
     .slice(0, 6);
+  const publicTimeline = cmsData.timeline.slice().sort((a, b) => a.sortOrder - b.sortOrder || a.id - b.id);
+  const diplomaTimelineIndex = Math.max(0, publicTimeline.findIndex((item) => {
+    const educationDetails = `${item.title} ${item.data.category ?? ''} ${item.data.institution ?? ''}`.toLowerCase();
+    return educationDetails.includes('don bosco') || educationDetails.includes('udbl') || educationDetails.includes('formation supérieure');
+  }));
   const publicSocials = cmsData.socials.filter(
     (item) => typeof item.data.url === 'string' && item.data.url.trim().length > 0
   );
@@ -371,15 +376,15 @@ export default function Home() {
               </h2>
               <div className="about-columns">
                 <p className="lead-copy">
-                  Landry Kayoyo, sous la marque Landry Net, est un professionnel de
-                  l&apos;infrastructure IT qui aide les organisations à structurer, sécuriser et
-                  optimiser leurs systèmes, réseaux et services critiques.
+                  Landry Kayoyo, sous la marque Landry Net, accompagne les organisations dans la
+                  conception, la sécurisation et l&apos;optimisation de leurs systèmes, réseaux et
+                  services critiques.
                 </p>
                 <div className="body-copy">
                   <p>
                     Mon rôle consiste à clarifier les dépendances, réduire les angles morts et
-                    mettre en place des bases solides pour la disponibilité, la sécurité
-                    informatique, le monitoring et la continuité des activités.
+                    poser des fondations solides pour la disponibilité, la sécurité, le monitoring
+                    et la continuité des activités.
                   </p>
                   <a
                     href="/a-propos"
@@ -456,7 +461,7 @@ export default function Home() {
                   <Reveal key={project.id} delay={index * 0.06} className="publication-card">
                     <a href={`/publication/${project.id}`}>
                       <img
-                        className="publication-cover"
+                        className={`publication-cover${typeof project.data.coverImage === 'string' && project.data.coverImage ? '' : ' is-placeholder-cover'}`}
                         src={
                           typeof project.data.coverImage === 'string' && project.data.coverImage
                             ? project.data.coverImage
@@ -613,26 +618,48 @@ export default function Home() {
                 <em>systèmes &amp; réseaux.</em>
               </h2>
             </Reveal>
-            <Reveal delay={0.1} className="path-content">
-              <div className="path-marker">
-                <span>2026</span>
-                <i />
-              </div>
-              <div className="path-copy">
-                <span className="path-type">Formation supérieure</span>
-                <h3>
-                  Administration
-                  <br />
-                  Systèmes &amp; Réseaux
-                </h3>
-                <p>Université Don Bosco de Lubumbashi</p>
-                <small>
-                  Projet de fin de cycle — mise en place d&apos;une haute disponibilité des
-                  services, architecture réseau robuste et optimisation de l&apos;infrastructure IT.
-                </small>
-              </div>
-              <DiplomaCollage />
-            </Reveal>
+            <div className="path-list">
+              {publicTimeline.length > 0 ? publicTimeline.map((item, index) => (
+              <Reveal
+                key={item.id}
+                delay={0.1 + index * 0.06}
+                className={`path-content${index === diplomaTimelineIndex ? ' path-content-featured' : ''}`}
+              >
+                <div className="path-marker">
+                  <span>{String(item.data.date ?? "") || "—"}</span>
+                  <i />
+                </div>
+                <div className="path-copy">
+                  <span className="path-type">{String(item.data.category ?? "Parcours")}</span>
+                  <h3>{item.title}</h3>
+                  {typeof item.data.institution === "string" && <p>{item.data.institution}</p>}
+                  {typeof item.data.description === "string" && <small>{item.data.description}</small>}
+                </div>
+                {index === diplomaTimelineIndex && <DiplomaCollage />}
+              </Reveal>
+            )) : (
+              <Reveal delay={0.1} className="path-content">
+                <div className="path-marker">
+                  <span>2026</span>
+                  <i />
+                </div>
+                <div className="path-copy">
+                  <span className="path-type">Formation supérieure</span>
+                  <h3>
+                    Administration
+                    <br />
+                    Systèmes &amp; Réseaux
+                  </h3>
+                  <p>Université Don Bosco de Lubumbashi</p>
+                  <small>
+                    Projet de fin de cycle — mise en place d&apos;une haute disponibilité des
+                    services, architecture réseau robuste et optimisation de l&apos;infrastructure IT.
+                  </small>
+                </div>
+                <DiplomaCollage />
+              </Reveal>
+            )}
+            </div>
           </div>
         </section>
 
@@ -668,11 +695,11 @@ export default function Home() {
                   data-testid="status-contact-success"
                 >
                   <CheckCircle2 size={26} />
-                  <span>Message enregistré</span>
-                  <h3>Le contexte est posé.</h3>
+                  <span>Message envoyé</span>
+                  <h3>Merci{form.nom.trim() ? `, ${form.nom.trim()}` : ''}.</h3>
                   <p>
-                    Votre brouillon est conservé sur cet appareil. Merci pour la clarté — c&apos;est
-                    déjà un bon début de projet.
+                    Votre message a bien été envoyé. Je vous répondrai à l&apos;adresse{' '}
+                    <strong>{form.email}</strong> dès que possible.
                   </p>
                   <button
                     type="button"
@@ -685,6 +712,10 @@ export default function Home() {
                 </div>
               ) : (
                 <form className="contact-form" onSubmit={submitContact} noValidate>
+                  <div className="contact-form-intro">
+                    <span>Votre demande</span>
+                    <p>Quelques détails suffisent pour comprendre votre besoin et les prochaines étapes.</p>
+                  </div>
                   {status === 'error' && Object.keys(errors).length > 0 && (
                     <div
                       className="form-error"
@@ -699,48 +730,63 @@ export default function Home() {
                       <span>Votre nom</span>
                       <input
                         data-testid="input-contact-name"
+                        name="nom"
+                        autoComplete="name"
+                        required
                         value={form.nom}
                         onChange={(e) => updateField('nom', e.target.value)}
                         aria-invalid={Boolean(errors.nom)}
+                        aria-describedby={errors.nom ? 'contact-name-error' : undefined}
                         placeholder="Nom et prénom"
                       />
-                      {errors.nom && <small>{errors.nom}</small>}
+                      {errors.nom && <small id="contact-name-error">{errors.nom}</small>}
                     </label>
                     <label>
                       <span>E-mail</span>
                       <input
                         data-testid="input-contact-email"
                         type="email"
+                        name="email"
+                        autoComplete="email"
+                        required
                         value={form.email}
                         onChange={(e) => updateField('email', e.target.value)}
                         aria-invalid={Boolean(errors.email)}
+                        aria-describedby={errors.email ? 'contact-email-error' : undefined}
                         placeholder="vous@exemple.com"
                       />
-                      {errors.email && <small>{errors.email}</small>}
+                      {errors.email && <small id="contact-email-error">{errors.email}</small>}
                     </label>
                   </div>
                   <label>
                     <span>Sujet</span>
                     <input
                       data-testid="input-contact-subject"
+                      name="sujet"
+                      autoComplete="off"
+                      required
                       value={form.sujet}
                       onChange={(e) => updateField('sujet', e.target.value)}
                       aria-invalid={Boolean(errors.sujet)}
+                      aria-describedby={errors.sujet ? 'contact-subject-error' : undefined}
                       placeholder="Infrastructure, réseau, automatisation..."
                     />
-                    {errors.sujet && <small>{errors.sujet}</small>}
+                    {errors.sujet && <small id="contact-subject-error">{errors.sujet}</small>}
                   </label>
                   <label>
                     <span>Contexte</span>
                     <textarea
                       data-testid="input-contact-message"
+                      name="message"
+                      required
                       rows={5}
                       value={form.message}
                       onChange={(e) => updateField('message', e.target.value)}
                       aria-invalid={Boolean(errors.message)}
+                      aria-describedby={errors.message ? 'contact-message-error' : undefined}
                       placeholder="Ce qui existe, ce qui bloque, ce qui doit changer..."
                     />
-                    {errors.message && <small>{errors.message}</small>}
+                    {errors.message && <small id="contact-message-error">{errors.message}</small>}
                   </label>
                   <button
                     type="submit"
@@ -748,7 +794,7 @@ export default function Home() {
                     disabled={status === 'loading'}
                     data-testid="button-submit-contact"
                   >
-                    {status === 'loading' ? 'Enregistrement…' : 'Envoyer le contexte'}
+                    {status === 'loading' ? 'Envoi en cours…' : 'Envoyer ma demande'}
                     <Send size={16} />
                   </button>
                 </form>
@@ -774,20 +820,22 @@ export default function Home() {
           </nav>
         </div>
         <div className="shell footer-inner">
-          <a href="#top" className="footer-brand" data-testid="link-footer-home">
-            <img
-              src={brandLogo}
-              alt="Logo Landry Net, Landry Kayoyo, expertise IT et infrastructure"
-              width="40"
-              height="40"
-              loading="lazy"
-              decoding="async"
-            />
-            LANDRY NET
-          </a>
-          <div className="footer-context">
-            <span>Architecture IT / systèmes / réseaux</span>
-            <span>Lubumbashi, RDC</span>
+          <div className="footer-identity">
+            <a href="#top" className="footer-brand" data-testid="link-footer-home">
+              <img
+                src={brandLogo}
+                alt="Logo Landry Net, Landry Kayoyo, expertise IT et infrastructure"
+                width="40"
+                height="40"
+                loading="lazy"
+                decoding="async"
+              />
+              LANDRY NET
+            </a>
+            <div className="footer-context">
+              <span>Architecture IT · Systèmes · Réseaux</span>
+              <span>Lubumbashi, RDC</span>
+            </div>
           </div>
           {publicSocials.length > 0 && (
             <nav className="footer-socials" aria-label="Réseaux sociaux">

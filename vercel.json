@@ -4,9 +4,20 @@
   "outputDirectory": "apps/web/dist/public",
   "rewrites": [
     { "source": "/api/:path*", "destination": "/api" },
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(facebookexternalhit|facebot|twitterbot|whatsapp|linkedinbot|telegrambot|slackbot|discordbot|pinterest|vkshare|w3c_validator|googlebot|bingbot|duckduckbot).*"
+        }
+      ],
+      "destination": "/api"
+    },
     { "source": "/googlec2efbadc182e829e.html", "destination": "/googlec2efbadc182e829e.html" },
     { "source": "/admin", "destination": "/index.html" },
     { "source": "/admin/:path*", "destination": "/index.html" },
-    { "source": "/:path*", "destination": "/index.html" }
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

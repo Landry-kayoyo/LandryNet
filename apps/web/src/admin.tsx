@@ -241,17 +241,22 @@ function AiChatBubble({ setNotice, onContentChanged }: { setNotice: (msg: string
   const handleValidateProposal = async (proposal: any) => {
     try {
       setThinking(true);
-      await request("/admin/items", {
-        method: "POST",
-        body: JSON.stringify({
-          type: proposal.type,
-          title: proposal.title,
-          data: proposal.data,
-          published: true,
-          visible: true
-        })
+      const isUpdate = proposal.action === "PROPOSE_UPDATE";
+      await request(isUpdate ? `/admin/items/${proposal.id}` : "/admin/items", {
+        method: isUpdate ? "PATCH" : "POST",
+        body: JSON.stringify(isUpdate
+          ? { title: proposal.title, data: proposal.data }
+          : {
+              type: proposal.type,
+              title: proposal.title,
+              data: proposal.data,
+              published: true,
+              visible: true
+            })
       });
-      setNotice(`Le contenu '${proposal.title}' a été publié.`);
+      setNotice(isUpdate
+        ? `Les modifications de '${proposal.title ?? `#${proposal.id}`}' ont été enregistrées.`
+        : `Le contenu '${proposal.title}' a été publié.`);
       onContentChanged?.();
       // Remove proposal from history so we don't click it again
       setMessages(prev => prev.map(m => ({
@@ -290,12 +295,20 @@ function AiChatBubble({ setNotice, onContentChanged }: { setNotice: (msg: string
                 {msg.proposals?.map((p, j) => (
                   <div key={j} style={{ marginTop: 10, padding: 10, background: "rgba(255,255,255,0.05)", borderRadius: 6, border: "1px solid rgba(255,255,255,0.1)" }}>
                     <div style={{ fontWeight: 600, marginBottom: 5 }}>{p.title}</div>
-                    <div style={{ fontSize: "0.85em", opacity: 0.8, marginBottom: 10 }}>Type: {p.type}</div>
+                    <div style={{ fontSize: "0.85em", opacity: 0.8, marginBottom: 10 }}>
+                      {p.action === "PROPOSE_UPDATE" ? `Modification du contenu #${p.id}` : `Type : ${p.type}`}
+                      {Object.entries(p.data ?? {}).map(([key, value]) => (
+                        <div key={key} style={{ marginTop: 6, overflowWrap: "anywhere" }}>
+                          <strong>{key} :</strong> {String(value).slice(0, 280)}{String(value).length > 280 ? "…" : ""}
+                        </div>
+                      ))}
+                    </div>
                     <button 
                       onClick={() => void handleValidateProposal(p)}
+                      disabled={thinking}
                       style={{ background: "var(--admin-lime)", color: "black", border: "none", padding: "6px 12px", borderRadius: 4, cursor: "pointer", fontWeight: 600, fontSize: "0.9em" }}
                     >
-                      Valider et publier
+                      {p.action === "PROPOSE_UPDATE" ? "Valider les modifications" : "Valider et publier"}
                     </button>
                   </div>
                 ))}
@@ -569,100 +582,133 @@ function AdminApp() {
 
 
 function EvolutionChart({ data }: { data: EvolutionPoint[] }) {
-  const maxValue = Math.max(
-    1,
-    ...data.map((point) => Math.max(point.contents, point.messages)),
-  );
-  const pointString = (key: "contents" | "messages") =>
-    data
-      .map(
-        (point, index) =>
-          `${(index / Math.max(data.length - 1, 1)) * 100},${94 - (point[key] / maxValue) * 72}`,
-      )
-      .join(" ");
+  const [tooltip, setTooltip] = useState<{ x: number; y: number; label: string; contents: number; messages: number } | null>(null);
+  const svgRef = React.useRef<SVGSVGElement>(null);
+
+  const maxValue = Math.max(1, ...data.map((p) => Math.max(p.contents, p.messages)));
+  const hasAnyData = data.some((p) => p.contents > 0 || p.messages > 0);
+
+  const getY = (value: number) => 86 - (value / maxValue) * 64;
+  const getX = (index: number) => (index / Math.max(data.length - 1, 1)) * 96 + 2;
+
   const pointDots = (key: "contents" | "messages") =>
     data.map((point, index) => ({
-      x: (index / Math.max(data.length - 1, 1)) * 100,
-      y: 94 - (point[key] / maxValue) * 72,
+      x: getX(index),
+      y: getY(point[key]),
+      value: point[key],
+      label: point.label,
       date: point.date,
     }));
+
+  const pointString = (key: "contents" | "messages") =>
+    pointDots(key).map((p) => `${p.x},${p.y}`).join(" ");
+
   const areaString = (key: "contents" | "messages") => {
     if (data.length === 0) return "";
-    const points = pointDots(key);
-    const first = points[0];
-    const last = points[points.length - 1];
-    return `M ${first.x},94 ${points.map((point) => `L ${point.x},${point.y}`).join(" ")} L ${last.x},94 Z`;
+    const pts = pointDots(key);
+    return `M ${pts[0].x},90 ${pts.map((p) => `L ${p.x},${p.y}`).join(" ")} L ${pts[pts.length - 1].x},90 Z`;
   };
+
+  const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
+    const svg = svgRef.current;
+    if (!svg || data.length === 0) return;
+    const rect = svg.getBoundingClientRect();
+    const relX = ((e.clientX - rect.left) / rect.width) * 100;
+    // Find nearest data point
+    let nearest = 0;
+    let minDist = Infinity;
+    data.forEach((_, i) => {
+      const dist = Math.abs(getX(i) - relX);
+      if (dist < minDist) { minDist = dist; nearest = i; }
+    });
+    const pt = data[nearest];
+    setTooltip({ x: getX(nearest), y: Math.min(getY(pt.contents), getY(pt.messages)) - 5, label: pt.label, contents: pt.contents, messages: pt.messages });
+  };
+
   return (
-    <svg
-      className="evolution-svg"
-      viewBox="0 0 100 100"
-      role="img"
-      aria-label="Évolution des contenus et des messages"
-    >
-      <defs>
-        <linearGradient id="contentGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="rgba(25,125,136,0.28)" />
-          <stop offset="100%" stopColor="rgba(25,125,136,0.02)" />
-        </linearGradient>
-        <linearGradient id="messageGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="rgba(200,239,91,0.22)" />
-          <stop offset="100%" stopColor="rgba(200,239,91,0.02)" />
-        </linearGradient>
-      </defs>
-      <g className="evolution-grid">
-        <line x1="0" y1="22" x2="100" y2="22" />
-        <line x1="0" y1="58" x2="100" y2="58" />
-        <line x1="0" y1="94" x2="100" y2="94" />
-      </g>
-      <path
-        className="evolution-area evolution-area-content"
-        d={areaString("contents")}
-      />
-      <path
-        className="evolution-area evolution-area-messages"
-        d={areaString("messages")}
-      />
-      <polyline
-        className="evolution-line evolution-line-content"
-        points={pointString("contents")}
-      />
-      <polyline
-        className="evolution-line evolution-line-messages"
-        points={pointString("messages")}
-      />
-      {pointDots("contents").map((point, index) => (
-        <circle
-          className="evolution-point evolution-point-content"
-          key={`${point.date}-content`}
-          cx={point.x}
-          cy={point.y}
-          r="1.6"
-        />
-      ))}
-      {pointDots("messages").map((point, index) => (
-        <circle
-          className="evolution-point evolution-point-messages"
-          key={`${point.date}-messages`}
-          cx={point.x}
-          cy={point.y}
-          r="1.3"
-        />
-      ))}
-      {data.map((point, index) => (
-        <text
-          className="evolution-label"
-          key={point.date}
-          x={`${(index / Math.max(data.length - 1, 1)) * 100}%`}
-          y="100%"
-          textAnchor={
-            index === 0 ? "start" : index === data.length - 1 ? "end" : "middle"
-          }
-        >
-          {point.label}
-        </text>
-      ))}
-    </svg>
+    <div style={{ position: "relative" }}>
+      <svg
+        ref={svgRef}
+        className="evolution-svg"
+        viewBox="0 0 100 100"
+        role="img"
+        aria-label="Évolution des contenus et des messages"
+        onMouseMove={handleMouseMove}
+        onMouseLeave={() => setTooltip(null)}
+        style={{ cursor: "crosshair" }}
+      >
+        <defs>
+          <linearGradient id="contentGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="rgba(25,125,136,0.38)" />
+            <stop offset="100%" stopColor="rgba(25,125,136,0.02)" />
+          </linearGradient>
+          <linearGradient id="messageGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="rgba(200,239,91,0.30)" />
+            <stop offset="100%" stopColor="rgba(200,239,91,0.02)" />
+          </linearGradient>
+        </defs>
+        <g className="evolution-grid">
+          <line x1="0" y1="22" x2="100" y2="22" />
+          <line x1="0" y1="54" x2="100" y2="54" />
+          <line x1="0" y1="86" x2="100" y2="86" />
+        </g>
+        {!hasAnyData && (
+          <text x="50" y="50" textAnchor="middle" fill="rgba(255,255,255,0.2)" fontSize="5" fontFamily="Syne, sans-serif">
+            Aucune donnée pour cette période
+          </text>
+        )}
+        {/* Vertical hover line */}
+        {tooltip && (
+          <line x1={tooltip.x} y1="18" x2={tooltip.x} y2="88" stroke="rgba(255,255,255,0.15)" strokeWidth="0.4" strokeDasharray="2,1" />
+        )}
+        <path className="evolution-area evolution-area-content" d={areaString("contents")} />
+        <path className="evolution-area evolution-area-messages" d={areaString("messages")} />
+        <polyline className="evolution-line evolution-line-content" points={pointString("contents")} style={{ animation: "chartDraw 0.8s ease forwards" }} />
+        <polyline className="evolution-line evolution-line-messages" points={pointString("messages")} style={{ animation: "chartDraw 0.8s ease 0.15s forwards" }} />
+        {pointDots("contents").map((point) => (
+          <g key={`${point.date}-content`}>
+            <circle className="evolution-point evolution-point-content" cx={point.x} cy={point.y} r={tooltip?.label === point.label ? "2.5" : "1.8"} style={{ transition: "r 0.15s" }} />
+            {point.value > 0 && (
+              <text x={point.x} y={point.y - 3} textAnchor="middle" fill="rgba(25,200,220,0.9)" fontSize="4" fontFamily="Syne, sans-serif" fontWeight="700">{point.value}</text>
+            )}
+          </g>
+        ))}
+        {pointDots("messages").map((point) => (
+          <g key={`${point.date}-messages`}>
+            <circle className="evolution-point evolution-point-messages" cx={point.x} cy={point.y} r={tooltip?.label === point.label ? "2.2" : "1.5"} style={{ transition: "r 0.15s" }} />
+            {point.value > 0 && (
+              <text x={point.x} y={point.y - 3} textAnchor="middle" fill="rgba(200,239,91,0.9)" fontSize="4" fontFamily="Syne, sans-serif" fontWeight="700">{point.value}</text>
+            )}
+          </g>
+        ))}
+        {data.map((point, index) => (
+          <text className="evolution-label" key={point.date} x={`${getX(index)}%`} y="100%" textAnchor={index === 0 ? "start" : index === data.length - 1 ? "end" : "middle"}>
+            {point.label}
+          </text>
+        ))}
+      </svg>
+      {tooltip && (
+        <div style={{
+          position: "absolute",
+          top: `${(tooltip.y / 100) * 100}%`,
+          left: `${tooltip.x}%`,
+          transform: "translate(-50%, -100%)",
+          background: "rgba(10,20,35,0.92)",
+          border: "1px solid rgba(255,255,255,0.1)",
+          borderRadius: 8,
+          padding: "6px 12px",
+          pointerEvents: "none",
+          fontSize: 12,
+          whiteSpace: "nowrap",
+          zIndex: 10,
+          backdropFilter: "blur(8px)",
+        }}>
+          <div style={{ fontWeight: 700, marginBottom: 4, opacity: 0.6, fontSize: 10, textTransform: "uppercase", letterSpacing: 1 }}>{tooltip.label}</div>
+          <div style={{ color: "#19c8dc" }}>📄 Contenus : <strong>{tooltip.contents}</strong></div>
+          <div style={{ color: "#c8ef5b" }}>✉️ Messages : <strong>{tooltip.messages}</strong></div>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -692,9 +738,13 @@ function DonutChart({ value, max, color }: { value: number; max: number; color: 
 function Dashboard({
   counts,
   onMessages,
+  onPeriodChange,
+  period,
 }: {
   counts: Counts | null;
   onMessages: () => void;
+  onPeriodChange: (months: number) => void;
+  period: number;
 }) {
   const total = (counts?.projects ?? 0) + (counts?.skills ?? 0) + (counts?.technologies ?? 0) + (counts?.timeline ?? 0) + (counts?.socials ?? 0) + (counts?.services ?? 0);
   const donutData = [
@@ -772,9 +822,32 @@ function Dashboard({
               <span className="admin-eyebrow">Évolution</span>
               <h3>Le contenu prend forme.</h3>
             </div>
-            <div className="evolution-legend">
-              <span><i className="legend-dot legend-dot-content" /> Contenus</span>
-              <span><i className="legend-dot legend-dot-messages" /> Messages</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div className="evolution-legend">
+                <span><i className="legend-dot legend-dot-content" /> Contenus</span>
+                <span><i className="legend-dot legend-dot-messages" /> Messages</span>
+              </div>
+              <div style={{ display: "flex", gap: 4 }}>
+                {[3, 6, 12].map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => onPeriodChange(m)}
+                    style={{
+                      padding: "3px 10px",
+                      borderRadius: 20,
+                      border: period === m ? "1px solid var(--admin-teal)" : "1px solid rgba(255,255,255,0.1)",
+                      background: period === m ? "rgba(25,125,136,0.25)" : "transparent",
+                      color: period === m ? "var(--admin-teal)" : "rgba(255,255,255,0.4)",
+                      fontSize: 11,
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      transition: "all 0.2s",
+                    }}
+                  >
+                    {m}M
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
           <div className="evolution-chart">
@@ -1694,7 +1767,7 @@ function SingletonEditor({
           {Object.entries(data).map(([key, val]) => (
             <div key={key} style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
               <label style={{ flex: 1 }}>
-                <span style={{ color: "var(--admin-lime)", fontFamily: "Space Mono", fontSize: ".7rem", textTransform: "uppercase" }}>{key}</span>
+                <span style={{ color: "var(--admin-lime)", fontFamily: "DM Sans", fontSize: ".7rem", textTransform: "uppercase" }}>{key}</span>
                 {typeof val === "boolean" ? (
                   <select
                     value={val ? "true" : "false"}

@@ -217,14 +217,15 @@ router.post("/upload", requireAdmin, upload.single("file"), async (req: any, res
   }
 });
 
-router.get("/dashboard", requireAdmin, async (_req: any, res: any, next: any) => {
+router.get("/dashboard", requireAdmin, async (req: any, res: any, next: any) => {
  try {
+  const monthCount = Math.min(24, Math.max(1, Number(req.query.months) || 6));
   const items = await listCmsItems(undefined, true);
   const messages = await listContactMessages();
-  const evolution = Array.from({ length: 6 }, (_, index) => {
+  const evolution = Array.from({ length: monthCount }, (_, index) => {
     const date = new Date();
     date.setDate(1);
-    date.setMonth(date.getMonth() - (5 - index));
+    date.setMonth(date.getMonth() - (monthCount - 1 - index));
     return { date: date.toISOString().slice(0, 7), label: date.toLocaleDateString("fr-FR", { month: "short" }).replace(".", ""), contents: 0, messages: 0 };
   });
   for (const item of items) {
@@ -233,7 +234,7 @@ router.get("/dashboard", requireAdmin, async (_req: any, res: any, next: any) =>
     if (point) point.contents += 1;
   }
   for (const message of messages) {
-    const month = String(message.created_at).slice(0, 7);
+    const month = (message.created_at instanceof Date ? message.created_at.toISOString() : String(message.created_at)).slice(0, 7);
     const point = evolution.find((entry) => entry.date === month);
     if (point) point.messages += 1;
   }

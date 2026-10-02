@@ -33,6 +33,10 @@ const pool = new Pool({
   ssl: isSslEnabled ? { rejectUnauthorized: false } : undefined,
 });
 
+pool.on('error', (err) => {
+  console.error('Unexpected error on idle client', err);
+});
+
 export const db = pool;
 
 /** Lazily-resolved schema init promise — resolves once the tables exist. */
@@ -122,6 +126,8 @@ export type CmsItem = {
 
 function parseCmsItem(row: Record<string, unknown>): CmsItem {
   const rawData = row.data;
+  const toISO = (val: unknown) =>
+    val instanceof Date ? val.toISOString() : String(val);
   return {
     id: Number(row.id),
     type: row.type as CmsContentType,
@@ -133,8 +139,8 @@ function parseCmsItem(row: Record<string, unknown>): CmsItem {
     published: Boolean(row.published),
     visible: Boolean(row.visible),
     sortOrder: Number(row.sort_order),
-    createdAt: String(row.created_at),
-    updatedAt: String(row.updated_at),
+    createdAt: toISO(row.created_at),
+    updatedAt: toISO(row.updated_at),
   };
 }
 
