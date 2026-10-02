@@ -96,12 +96,12 @@ export default function Home() {
   const publicStackGroups =
     cmsData.technologies.length > 0
       ? cmsData.technologies.reduce<{ label: string; items: string[] }[]>((groups, item) => {
-          const label = String(item.data.category ?? 'Technologies');
-          const group = groups.find((c) => c.label === label);
-          if (group) group.items.push(item.title);
-          else groups.push({ label, items: [item.title] });
-          return groups;
-        }, [])
+        const label = String(item.data.category ?? 'Technologies');
+        const group = groups.find((c) => c.label === label);
+        if (group) group.items.push(item.title);
+        else groups.push({ label, items: [item.title] });
+        return groups;
+      }, [])
       : [];
 
   const publicProjects = cmsData.projects
@@ -192,14 +192,13 @@ export default function Home() {
                 alt="Logo Landry Net, Landry Kayoyo, infrastructure IT et systèmes fiables"
               />
             </span>
-            <span className="brand-wordmark">LANDRY NET</span>
+            <span className="brand-wordmark"><span className="brand-landry">LANDRY</span> NET</span>
           </a>
 
           <nav className="desktop-nav" aria-label="Navigation principale">
             {navItems.map((item, index) => (
               <a key={item.href} href={item.href} data-testid={`link-nav-${index}`}>
                 {item.label}
-                <sup>0{index + 1}</sup>
               </a>
             ))}
           </nav>
@@ -227,55 +226,43 @@ export default function Home() {
         {menuOpen && (
           <>
 
-                <motion.div
-                  className="mobile-menu-backdrop"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  onClick={closeMenu}
-                />
-                <motion.div
-                  className="mobile-menu"
-                  initial={{ opacity: 0, x: -40 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -40 }}
-                  transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-                >
-                  <div className="mobile-menu-header">
-                    <a href="#top" className="brand-lockup" onClick={closeMenu}>
-                      <span className="brand-logo">
-                        <img src={brandLogo} alt="Logo Landry Net" />
-                      </span>
-                      <span className="brand-wordmark">LANDRY NET</span>
+            <motion.div
+              className="mobile-menu-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={closeMenu}
+            />
+            <motion.div
+              className="mobile-menu"
+              initial={{ opacity: 0, x: -40 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -40 }}
+              transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <div className="mobile-menu-body">
+
+                <nav aria-label="Navigation mobile">
+                  {[...navItems, { label: 'Contact', href: '#contact' }].map((item, index) => (
+                    <a
+                      key={item.href}
+                      href={item.href}
+                      onClick={closeMenu}
+                      data-testid={`link-mobile-${index}`}
+                    >
+                      {item.label}
+                      <ArrowUpRight size={20} />
                     </a>
-                    <button type="button" className="mobile-menu-close" onClick={closeMenu} aria-label="Fermer le menu">
-                      <X size={18} />
-                    </button>
-                  </div>
-                  <div className="mobile-menu-body">
-                    <div className="mobile-menu-label">Navigation</div>
-                    <nav aria-label="Navigation mobile">
-                      {[...navItems, { label: 'Contact', href: '#contact' }].map((item, index) => (
-                        <a
-                          key={item.href}
-                          href={item.href}
-                          onClick={closeMenu}
-                          data-testid={`link-mobile-${index}`}
-                        >
-                          <span>0{index + 1}</span>
-                          {item.label}
-                          <ArrowUpRight size={20} />
-                        </a>
-                      ))}
-                    </nav>
-                    <div className="mobile-menu-footer">
-                      <a href="#contact" className="mobile-menu-cta" onClick={closeMenu}>
-                        Parlons projet <ArrowUpRight size={16} />
-                      </a>
-                    </div>
-                  </div>
-                </motion.div>
+                  ))}
+                </nav>
+                <div className="mobile-menu-footer">
+                  <a href="#contact" className="mobile-menu-cta" onClick={closeMenu}>
+                    Parlons projet <ArrowUpRight size={16} />
+                  </a>
+                </div>
+              </div>
+            </motion.div>
           </>
         )}
       </AnimatePresence>
@@ -338,27 +325,11 @@ export default function Home() {
                   decoding="async"
                 />
                 <div className="portrait-overlay" />
-                <div className="portrait-note">
-                  <span>LANDRY NET</span>
-                  <small>Architecture &amp; exploitation</small>
-                </div>
-                <div className="visual-stamp">
-                  <Cpu size={15} />
-                  <span>
-                    IT
-                    <br />
-                    SYSTEMS
-                  </span>
-                </div>
-              </div>
-              <div className="visual-caption">
-                Lubumbashi, RDC <span>—</span> 2025
               </div>
             </Reveal>
           </div>
           <a href="#about" className="scroll-note" data-testid="link-scroll-about">
-            <span>Défiler pour explorer</span>
-            <ChevronDown size={16} />
+            <ChevronDown size={18} />
           </a>
         </section>
 
@@ -620,45 +591,45 @@ export default function Home() {
             </Reveal>
             <div className="path-list">
               {publicTimeline.length > 0 ? publicTimeline.map((item, index) => (
-              <Reveal
-                key={item.id}
-                delay={0.1 + index * 0.06}
-                className={`path-content${index === diplomaTimelineIndex ? ' path-content-featured' : ''}`}
-              >
-                <div className="path-marker">
-                  <span>{String(item.data.date ?? "") || "—"}</span>
-                  <i />
-                </div>
-                <div className="path-copy">
-                  <span className="path-type">{String(item.data.category ?? "Parcours")}</span>
-                  <h3>{item.title}</h3>
-                  {typeof item.data.institution === "string" && <p>{item.data.institution}</p>}
-                  {typeof item.data.description === "string" && <small>{item.data.description}</small>}
-                </div>
-                {index === diplomaTimelineIndex && <DiplomaCollage />}
-              </Reveal>
-            )) : (
-              <Reveal delay={0.1} className="path-content">
-                <div className="path-marker">
-                  <span>2026</span>
-                  <i />
-                </div>
-                <div className="path-copy">
-                  <span className="path-type">Formation supérieure</span>
-                  <h3>
-                    Administration
-                    <br />
-                    Systèmes &amp; Réseaux
-                  </h3>
-                  <p>Université Don Bosco de Lubumbashi</p>
-                  <small>
-                    Projet de fin de cycle — mise en place d&apos;une haute disponibilité des
-                    services, architecture réseau robuste et optimisation de l&apos;infrastructure IT.
-                  </small>
-                </div>
-                <DiplomaCollage />
-              </Reveal>
-            )}
+                <Reveal
+                  key={item.id}
+                  delay={0.1 + index * 0.06}
+                  className={`path-content${index === diplomaTimelineIndex ? ' path-content-featured' : ''}`}
+                >
+                  <div className="path-marker">
+                    <span>{String(item.data.date ?? "") || "—"}</span>
+                    <i />
+                  </div>
+                  <div className="path-copy">
+                    <span className="path-type">{String(item.data.category ?? "Parcours")}</span>
+                    <h3>{item.title}</h3>
+                    {typeof item.data.institution === "string" && <p>{item.data.institution}</p>}
+                    {typeof item.data.description === "string" && <small>{item.data.description}</small>}
+                  </div>
+                  {index === diplomaTimelineIndex && <DiplomaCollage />}
+                </Reveal>
+              )) : (
+                <Reveal delay={0.1} className="path-content">
+                  <div className="path-marker">
+                    <span>2026</span>
+                    <i />
+                  </div>
+                  <div className="path-copy">
+                    <span className="path-type">Formation supérieure</span>
+                    <h3>
+                      Administration
+                      <br />
+                      Systèmes &amp; Réseaux
+                    </h3>
+                    <p>Université Don Bosco de Lubumbashi</p>
+                    <small>
+                      Projet de fin de cycle — mise en place d&apos;une haute disponibilité des
+                      services, architecture réseau robuste et optimisation de l&apos;infrastructure IT.
+                    </small>
+                  </div>
+                  <DiplomaCollage />
+                </Reveal>
+              )}
             </div>
           </div>
         </section>

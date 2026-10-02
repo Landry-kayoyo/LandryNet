@@ -343,9 +343,10 @@
 
 .brand-wordmark {
   color: var(--paper);
-  font-family: var(--app-font-mono);
-  font-size: var(--text-meta);
-  letter-spacing: .08em;
+  font-family: var(--app-font-sans);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: .04em;
 }
 
 .brand-wordmark b {
@@ -353,23 +354,28 @@
   font-weight: 700;
 }
 
+.brand-landry {
+  color: var(--blue);
+}
+
 .desktop-nav {
   display: flex;
   align-items: center;
-  gap: clamp(1.25rem, 3vw, 3.3rem);
-  margin-left: clamp(1.5rem, 3vw, 3rem);
+  gap: clamp(0.6rem, 1.8vw, 2rem);
+  margin-left: clamp(1rem, 2vw, 2rem);
   margin-right: 0;
 }
 
 .desktop-nav a {
   display: inline-flex;
-  align-items: baseline;
-  gap: .3rem;
+  align-items: center;
   color: rgba(238, 239, 226, .58);
-  font-family: var(--app-font-mono);
-  font-size: var(--text-label);
-  letter-spacing: .07em;
-  text-transform: uppercase;
+  font-family: var(--app-font-sans);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  letter-spacing: .01em;
+  text-transform: none;
+  white-space: nowrap;
   transition: color 180ms ease, transform 180ms ease;
 }
 
@@ -378,27 +384,27 @@
   transform: translateY(-2px);
 }
 
-.desktop-nav sup {
-  color: var(--blue);
-  font-size: var(--text-micro);
-}
-
 .header-contact {
   display: inline-flex;
   align-items: center;
-  gap: .55rem;
+  gap: .45rem;
+  flex-shrink: 0;
   margin-left: auto;
+  padding: .45rem .85rem;
+  border: 1px solid rgba(200, 235, 78, .35);
+  border-radius: 999px;
   color: var(--lime);
-  font-family: var(--app-font-mono);
-  font-size: var(--text-label);
-  letter-spacing: .09em;
-  text-transform: uppercase;
-  transition: color 180ms ease, transform 180ms ease;
+  font-family: var(--app-font-sans);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  transition: color 180ms ease, background 180ms ease, transform 180ms ease;
 }
 
 .header-contact:hover {
+  background: rgba(200, 235, 78, .1);
   color: var(--paper);
-  transform: translateX(3px);
+  transform: translateY(-2px);
 }
 
 .menu-toggle {
@@ -864,15 +870,12 @@
   position: absolute;
   z-index: 2;
   bottom: 2rem;
-  left: 48px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
-  gap: .7rem;
+  justify-content: center;
   color: rgba(238, 239, 226, .4);
-  font-family: var(--app-font-mono);
-  font-size: var(--text-micro);
-  letter-spacing: .12em;
-  text-transform: uppercase;
 }
 
 .scroll-note svg {
