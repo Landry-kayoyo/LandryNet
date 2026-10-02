@@ -1,0 +1,7 @@
+Redeploy trigger
+
+This file is a no-op deploy trigger committed to the branch to force Vercel to rebuild the fix/about-page-navigation-and-sharing branch.
+
+Timestamp: 2026-10-02T08:25:00Z
+
+Note: No environment variables were added or changed by this commit. Use existing project environment variables on Vercel for the build.
