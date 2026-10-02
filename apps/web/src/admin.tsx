@@ -284,3 +284,5 @@ function AiChatBubble({ setNotice, onContentChanged }: { setNotice: (msg: string
     </div>
   );
 }
+
+export default AdminApp;
