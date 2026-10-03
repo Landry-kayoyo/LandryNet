@@ -325,6 +325,21 @@ export default function Home() {
                   decoding="async"
                 />
                 <div className="portrait-overlay" />
+                <div className="portrait-note">
+                  <span>LANDRY NET</span>
+                  <small>Architecture &amp; exploitation</small>
+                </div>
+                <div className="visual-stamp">
+                  <Cpu size={15} />
+                  <span>
+                    IT
+                    <br />
+                    SYSTEMS
+                  </span>
+                </div>
+              </div>
+              <div className="visual-caption">
+                Lubumbashi, RDC <span>—</span> 2026
               </div>
             </Reveal>
           </div>
