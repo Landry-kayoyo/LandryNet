@@ -6,6 +6,7 @@ type SeoConfig = {
   description: string;
   path?: string;
   image?: string;
+  noindex?: boolean;
   structuredData?: Record<string, unknown> | Record<string, unknown>[];
 };
 
@@ -31,6 +32,7 @@ export function useSeoMeta({
   description,
   path = '/',
   image = defaultCover,
+  noindex = false,
   structuredData,
 }: SeoConfig) {
   useEffect(() => {
@@ -57,7 +59,9 @@ export function useSeoMeta({
     setMetaTag(
       'meta[name="robots"]',
       { name: 'robots' },
-      'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1'
+      noindex
+        ? 'noindex, nofollow'
+        : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1'
     );
 
     const canonicalLink =
@@ -75,5 +79,5 @@ export function useSeoMeta({
       script.textContent = JSON.stringify(structuredData);
       document.head.appendChild(script);
     }
-  }, [description, image, path, structuredData, title]);
+  }, [description, image, noindex, path, structuredData, title]);
 }

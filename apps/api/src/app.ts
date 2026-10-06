@@ -15,7 +15,10 @@ const SITE_URL = process.env.VITE_SITE_URL || "https://landrynet.vercel.app";
 
 // User-agents of known social media crawlers
 const BOT_UA_RE =
-  /facebookexternalhit|facebot|twitterbot|whatsapp|linkedinbot|telegrambot|slackbot|discordbot|pinterest|vkShare|W3C_Validator|Googlebot|bingbot|DuckDuckBot/i;
+  /facebookexternalhit|facebot|twitterbot|whatsapp|linkedinbot|telegrambot|slackbot|discordbot|pinterest|vkShare|W3C_Validator/i;
+
+const xmlEscape = (value: string) =>
+  value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&apos;");
 
 const STATIC_OG: Record<string, { title: string; description: string; image: string }> = {
   "/": {
@@ -96,6 +99,29 @@ async function resolveOgMeta(path: string): Promise<{ title: string; description
 }
 
 const app = express();
+
+// Keep the sitemap live so newly published CMS projects are discoverable without a redeploy.
+const serveSitemap = async (_req: any, res: any, next: any) => {
+  try {
+    const { projects } = await getPublicCmsData();
+    const staticPaths = ["/", "/a-propos", "/services", "/projets"];
+    const projectUrls = projects.map((project: any) => {
+      const lastmod = project.updatedAt ? `<lastmod>${xmlEscape(String(project.updatedAt).slice(0, 10))}</lastmod>` : "";
+      return `<url><loc>${xmlEscape(`${SITE_URL}/publication/${encodeURIComponent(String(project.id))}`)}</loc>${lastmod}<changefreq>monthly</changefreq><priority>0.7</priority></url>`;
+    });
+    const staticUrls = staticPaths.map((path) =>
+      `<url><loc>${xmlEscape(`${SITE_URL}${path}`)}</loc><changefreq>${path === "/" || path === "/projets" ? "weekly" : "monthly"}</changefreq><priority>${path === "/" ? "1.0" : "0.8"}</priority></url>`,
+    );
+    res.setHeader("Content-Type", "application/xml; charset=utf-8");
+    res.setHeader("Cache-Control", "public, max-age=300, stale-while-revalidate=600");
+    res.send(`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${[...staticUrls, ...projectUrls].join("")}</urlset>`);
+  } catch (error) {
+    next(error);
+  }
+};
+app.get("/sitemap.xml", serveSitemap);
+app.get("/api", serveSitemap);
+app.get("/api/sitemap", serveSitemap);
 
 // ── Social bot middleware (must come before static/SPA serving) ──────────────
 app.use(async (req: any, res: any, next: any) => {

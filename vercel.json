@@ -3,6 +3,7 @@
   "buildCommand": "pnpm --filter @workspace/api run build && pnpm run db:migrate:postgres && pnpm --filter @workspace/web run build",
   "outputDirectory": "apps/web/dist/public",
   "rewrites": [
+    { "source": "/sitemap.xml", "destination": "/api" },
     { "source": "/api/:path*", "destination": "/api" },
     {
       "source": "/(.*)",
@@ -10,7 +11,7 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": "(?i).*(facebookexternalhit|facebot|twitterbot|whatsapp|linkedinbot|telegrambot|slackbot|discordbot|pinterest|vkshare|w3c_validator|googlebot|bingbot|duckduckbot).*"
+          "value": "(?i).*(facebookexternalhit|facebot|twitterbot|whatsapp|linkedinbot|telegrambot|slackbot|discordbot|pinterest|vkshare|w3c_validator).*"
         }
       ],
       "destination": "/api"
