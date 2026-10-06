@@ -10,9 +10,7 @@ import {
   ChevronRight,
   Cpu,
   ExternalLink,
-  Github,
   Globe2,
-  Instagram,
   Linkedin,
   Menu,
   Network,
@@ -20,10 +18,17 @@ import {
   Server,
   ShieldCheck,
   Terminal,
+  Twitter,
   X,
 } from 'lucide-react';
+import {
+  SiFacebook,
+  SiGithub,
+  SiInstagram,
+  SiYoutube,
+} from 'react-icons/si';
 import { Reveal, SectionKicker } from '@/components/reveal';
-import { DiplomaCollage, FieldNotesCarousel } from '@/components/terrain';
+import { FieldNotesCarousel } from '@/components/terrain';
 import { useSeoMeta } from '@/hooks/use-seo-meta';
 import { usePublicCmsData } from '@/hooks/use-public-cms-data';
 import {
@@ -41,9 +46,12 @@ type ContactFields = { nom: string; email: string; sujet: string; message: strin
 type ContactErrors = Partial<Record<keyof ContactFields, string>>;
 
 const socialIcons = {
-  github: Github,
+  github: SiGithub,
   linkedin: Linkedin,
-  instagram: Instagram,
+  instagram: SiInstagram,
+  facebook: SiFacebook,
+  twitter: Twitter,
+  youtube: SiYoutube,
   website: Globe2,
 };
 
@@ -82,6 +90,9 @@ export default function Home() {
   const [errors, setErrors] = useState<ContactErrors>({});
   const [status, setStatus] = useState<FormStatus>('idle');
   const cmsData = usePublicCmsData();
+  const cvUrl = [cmsData.profile.cvUrl, cmsData.profile.cv_url, cmsData.profile.resumeUrl, cmsData.profile.resume_url, cmsData.profile.cv, cmsData.profile.resume]
+    .find((value): value is string => typeof value === 'string' && value.trim().length > 0)
+    ?.trim();
 
   const cmsExpertise = cmsData.skills.map((item, index) => ({
     number: String(index + 1).padStart(2, '0'),
@@ -208,6 +219,12 @@ export default function Home() {
             <ArrowUpRight size={16} />
           </a>
 
+          {cvUrl && (
+            <a href={cvUrl} className="header-cv" target="_blank" rel="noreferrer" aria-label="Télécharger le CV de Landry Kayoyo">
+              CV <ArrowUpRight size={15} />
+            </a>
+          )}
+
           <button
             type="button"
             className="menu-toggle"
@@ -244,11 +261,14 @@ export default function Home() {
               <div className="mobile-menu-body">
 
                 <nav aria-label="Navigation mobile">
-                  {[...navItems, { label: 'Contact', href: '#contact' }].map((item, index) => (
+                  {[...navItems, { label: 'Contact', href: '#contact' }, ...(cvUrl ? [{ label: 'Télécharger mon CV', href: cvUrl }] : [])].map((item, index) => (
                     <a
                       key={item.href}
                       href={item.href}
                       onClick={closeMenu}
+                      className={item.label === 'Télécharger mon CV' ? 'mobile-menu-cv' : undefined}
+                      target={item.label === 'Télécharger mon CV' ? '_blank' : undefined}
+                      rel={item.label === 'Télécharger mon CV' ? 'noreferrer' : undefined}
                       data-testid={`link-mobile-${index}`}
                     >
                       {item.label}
@@ -305,6 +325,11 @@ export default function Home() {
                 <a href="#about" className="text-link" data-testid="link-hero-about">
                   Mon approche <ChevronRight size={16} />
                 </a>
+                {cvUrl && (
+                  <a href={cvUrl} className="button button-outline" target="_blank" rel="noreferrer" data-testid="link-hero-cv">
+                    Télécharger mon CV <ArrowUpRight size={17} />
+                  </a>
+                )}
               </Reveal>
               <Reveal delay={0.3} className="hero-footnote">
                 <span className="status-dot" /> Disponible pour des environnements à structurer
@@ -609,7 +634,7 @@ export default function Home() {
                 <Reveal
                   key={item.id}
                   delay={0.1 + index * 0.06}
-                  className={`path-content${index === diplomaTimelineIndex ? ' path-content-featured' : ''}`}
+                  className="path-content"
                 >
                   <div className="path-marker">
                     <span>{String(item.data.date ?? "") || "—"}</span>
@@ -621,7 +646,6 @@ export default function Home() {
                     {typeof item.data.institution === "string" && <p>{item.data.institution}</p>}
                     {typeof item.data.description === "string" && <small>{item.data.description}</small>}
                   </div>
-                  {index === diplomaTimelineIndex && <DiplomaCollage />}
                 </Reveal>
               )) : (
                 <Reveal delay={0.1} className="path-content">
@@ -642,7 +666,6 @@ export default function Home() {
                       services, architecture réseau robuste et optimisation de l&apos;infrastructure IT.
                     </small>
                   </div>
-                  <DiplomaCollage />
                 </Reveal>
               )}
             </div>
@@ -827,7 +850,9 @@ export default function Home() {
             <nav className="footer-socials" aria-label="Réseaux sociaux">
               {publicSocials.map((social) => {
                 const label = social.title.replace(/^\[TEST\]\s*/i, '');
-                const key = String(social.data.icon ?? label).toLowerCase();
+                const key = `${String(social.data.icon ?? '')} ${label} ${String(social.data.url ?? '')}`
+                  .toLowerCase()
+                  .replace(/[^a-z0-9]+/g, ' ');
                 const Icon =
                   Object.entries(socialIcons).find(([name]) => key.includes(name))?.[1] ??
                   ExternalLink;
@@ -840,7 +865,7 @@ export default function Home() {
                     aria-label={label}
                     title={label}
                   >
-                    <Icon size={15} />
+                    <Icon className="footer-social-icon" aria-hidden="true" />
                     <span>{label}</span>
                   </a>
                 );

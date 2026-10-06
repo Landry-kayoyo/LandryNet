@@ -16,6 +16,7 @@ export type PublicCmsData = {
   timeline: PublicCmsItem[];
   socials: PublicCmsItem[];
   services: PublicCmsItem[];
+  certifications: PublicCmsItem[];
 };
 
 export function usePublicCmsData(): PublicCmsData & { loading: boolean } {
@@ -27,6 +28,7 @@ export function usePublicCmsData(): PublicCmsData & { loading: boolean } {
     timeline: [],
     socials: [],
     services: [],
+    certifications: [],
   });
   const [loading, setLoading] = useState(true);
 

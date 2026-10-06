@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { ArrowDownRight, ArrowUpRight } from 'lucide-react';
+import { ArrowDownRight, ArrowUpRight, Download } from 'lucide-react';
 import { useRoute } from 'wouter';
 import { SectionKicker } from '@/components/reveal';
 import { useSeoMeta } from '@/hooks/use-seo-meta';
@@ -16,17 +16,28 @@ export function PublicationPage() {
   const data = usePublicCmsData();
   const project: PublicCmsItem | null =
     data.projects.find((p) => String(p.id) === params?.id) ?? null;
+  const projectTechnologies = Array.isArray(project?.data.technologies)
+    ? project.data.technologies.map(String).join(' · ')
+    : String(project?.data.technologies ?? '');
 
   useSeoMeta({
     title: params?.id ? `Publication ${params.id}` : 'Publication',
     description:
       'Consultez les projets et réalisations de Landry Kayoyo dans les domaines des systèmes, réseaux et infrastructure.',
     path: params?.id ? `/publication/${params.id}` : '/publication',
+    noindex: !data.loading && !project,
     image:
       project?.data.coverImage && typeof project.data.coverImage === 'string'
         ? project.data.coverImage
         : defaultCover,
   });
+
+  if (!project && data.loading)
+    return (
+      <main className="publication-page publication-page-state" aria-live="polite" aria-busy="true">
+        <h1>Chargement du projet…</h1>
+      </main>
+    );
 
   if (!project)
     return (
@@ -67,22 +78,22 @@ export function PublicationPage() {
       </section>
 
       <section className="publication-page-body">
-        {typeof project.data.context === 'string' && (
+        {typeof project.data.context === 'string' && project.data.context.trim() && (
           <div className="publication-page-block">
             <span>Contexte</span>
             <p>{project.data.context}</p>
           </div>
         )}
-        {typeof project.data.details === 'string' && (
+        {typeof project.data.details === 'string' && project.data.details.trim() && (
           <div className="publication-page-block">
             <span>Détails</span>
             <p>{project.data.details}</p>
           </div>
         )}
-        {typeof project.data.technologies === 'string' && (
+        {projectTechnologies && (
           <div className="publication-page-block">
             <span>Technologies</span>
-            <p>{project.data.technologies}</p>
+            <p>{projectTechnologies}</p>
           </div>
         )}
         {typeof project.data.category === 'string' && (
@@ -91,6 +102,13 @@ export function PublicationPage() {
             <p>{project.data.category}</p>
           </div>
         )}
+        {typeof project.data.description === 'string' && project.data.description.trim() &&
+          ![project.data.context, project.data.details].some((field) => typeof field === 'string' && field.trim() === project.data.description) && (
+            <div className="publication-page-block">
+              <span>Résumé</span>
+              <p>{project.data.description}</p>
+            </div>
+          )}
       </section>
     </main>
   );
@@ -118,6 +136,7 @@ export function AboutPage() {
   const profileDescription =
     getProfileText('bio', 'about', 'description', 'summary', 'intro') ||
     'Landry Kayoyo, sous la marque Landry Net, est administrateur systèmes et réseaux, spécialisé dans les infrastructures IT, la sécurité informatique, le monitoring, les réseaux et l’optimisation des services numériques.';
+  const cvUrl = getProfileText('cvUrl', 'cv_url', 'resumeUrl', 'resume_url', 'cv', 'resume');
 
   useSeoMeta({
     title: `À propos | ${profileName}`,
@@ -191,6 +210,11 @@ export function AboutPage() {
             <em>Landry Net.</em>
           </h1>
           <p>{profileDescription}</p>
+          {cvUrl && (
+            <a className="button button-accent about-cv-button" href={cvUrl} target="_blank" rel="noreferrer">
+              <Download size={16} /> Télécharger mon CV
+            </a>
+          )}
         </div>
         <img
           src={profileImage}
@@ -226,6 +250,35 @@ export function AboutPage() {
           </p>
         </div>
       </section>
+
+      {!data.loading && data.certifications.length > 0 && (
+        <section className="about-skills">
+          <div className="about-technologies-heading">
+            <SectionKicker index="04">Certifications</SectionKicker>
+            <h2>Certifications professionnelles</h2>
+          </div>
+          <div className="skill-groups">
+            <article className="skill-group">
+              <ul>
+                {data.certifications.map((certification) => (
+                  <li key={certification.id}>
+                    <strong>{certification.title}</strong>
+                    {typeof certification.data.issuer === 'string' && <p>{certification.data.issuer}</p>}
+                    {typeof certification.data.date === 'string' && <p>{certification.data.date}</p>}
+                    {typeof certification.data.description === 'string' && <p>{certification.data.description}</p>}
+                    {typeof certification.data.url === 'string' && certification.data.url && (
+                      <a href={certification.data.url} target="_blank" rel="noreferrer">Voir le certificat ↗</a>
+                    )}
+                    {typeof certification.data.documentUrl === 'string' && certification.data.documentUrl && (
+                      <a href={certification.data.documentUrl} target="_blank" rel="noreferrer">Ouvrir le document ↗</a>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </article>
+          </div>
+        </section>
+      )}
 
       {skillGroups.length > 0 && (
         <section id="competences" className="about-skills">

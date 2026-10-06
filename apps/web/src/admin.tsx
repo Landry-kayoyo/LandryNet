@@ -35,7 +35,7 @@ const API =
     window.location.hostname === "127.0.0.1")
     ? "http://localhost:5000/api"
     : "/api");
-type ContentType = "skill" | "technology" | "project" | "timeline" | "social" | "service";
+type ContentType = "skill" | "technology" | "project" | "timeline" | "social" | "service" | "certification";
 type Item = {
   id: number;
   type: ContentType;
@@ -58,10 +58,30 @@ type Counts = {
   timeline: number;
   socials: number;
   services: number;
+  certifications: number;
   messages: number;
   unreadMessages: number;
   evolution?: EvolutionPoint[];
 };
+
+function proposalNeedsMoreDetails(proposal: any): boolean {
+  if (proposal?.action !== "PROPOSE_CREATE" || proposal?.type !== "project") return false;
+  const description = String(proposal?.data?.description ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+  return /\?|quel est le type|peux-tu me donner|peux-tu preciser|donner une breve description|besoin de quelques details|a preciser selon le besoin|j'ai besoin de quelques details/.test(description);
+}
+
+function plainText(value: unknown): string {
+  return String(value ?? "")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/\*\*|__|~~|[*_`]/g, "")
+    .replace(/^\s{0,3}#{1,6}\s+/gm, "")
+    .replace(/^\s*[-*+]\s+/gm, "• ")
+    .replace(/^\s*>\s?/gm, "")
+    .trim();
+}
 
 const labels: Record<ContentType, string> = {
   skill: "Compétences",
@@ -70,6 +90,7 @@ const labels: Record<ContentType, string> = {
   timeline: "Parcours",
   social: "Réseaux sociaux",
   service: "Services",
+  certification: "Certifications",
 };
 
 async function request(path: string, options: RequestInit = {}) {
@@ -239,6 +260,11 @@ function AiChatBubble({ setNotice, onContentChanged }: { setNotice: (msg: string
   };
 
   const handleValidateProposal = async (proposal: any) => {
+    if (proposalNeedsMoreDetails(proposal)) {
+      setNotice("Cette proposition est incomplète. Demande à l’assistant de la préciser avant publication.");
+      return;
+    }
+
     try {
       setThinking(true);
       const isUpdate = proposal.action === "PROPOSE_UPDATE";
@@ -299,16 +325,16 @@ function AiChatBubble({ setNotice, onContentChanged }: { setNotice: (msg: string
                       {p.action === "PROPOSE_UPDATE" ? `Modification du contenu #${p.id}` : `Type : ${p.type}`}
                       {Object.entries(p.data ?? {}).map(([key, value]) => (
                         <div key={key} style={{ marginTop: 6, overflowWrap: "anywhere" }}>
-                          <strong>{key} :</strong> {String(value).slice(0, 280)}{String(value).length > 280 ? "…" : ""}
+                          <strong>{key} :</strong> {plainText(Array.isArray(value) ? value.join(" · ") : value).slice(0, 280)}{plainText(Array.isArray(value) ? value.join(" · ") : value).length > 280 ? "…" : ""}
                         </div>
                       ))}
                     </div>
                     <button 
                       onClick={() => void handleValidateProposal(p)}
-                      disabled={thinking}
+                      disabled={thinking || proposalNeedsMoreDetails(p)}
                       style={{ background: "var(--admin-lime)", color: "black", border: "none", padding: "6px 12px", borderRadius: 4, cursor: "pointer", fontWeight: 600, fontSize: "0.9em" }}
                     >
-                      {p.action === "PROPOSE_UPDATE" ? "Valider les modifications" : "Valider et publier"}
+                      {p.action === "PROPOSE_UPDATE" ? "Valider les modifications" : proposalNeedsMoreDetails(p) ? "À compléter avant publication" : "Valider et publier"}
                     </button>
                   </div>
                 ))}
@@ -752,7 +778,7 @@ function Dashboard({
   onPeriodChange: (months: number) => void;
   period: number;
 }) {
-  const total = (counts?.projects ?? 0) + (counts?.skills ?? 0) + (counts?.technologies ?? 0) + (counts?.timeline ?? 0) + (counts?.socials ?? 0) + (counts?.services ?? 0);
+  const total = (counts?.projects ?? 0) + (counts?.skills ?? 0) + (counts?.technologies ?? 0) + (counts?.timeline ?? 0) + (counts?.socials ?? 0) + (counts?.services ?? 0) + (counts?.certifications ?? 0);
   const donutData = [
     { label: "Projets",   value: counts?.projects ?? 0,     color: "#818cf8" },
     { label: "Comp.",     value: counts?.skills ?? 0,       color: "#38bdf8" },
@@ -760,6 +786,7 @@ function Dashboard({
     { label: "Parcours",  value: counts?.timeline ?? 0,     color: "#34d399" },
     { label: "Réseaux",   value: counts?.socials ?? 0,      color: "#f472b6" },
     { label: "Services",  value: counts?.services ?? 0,     color: "#fb923c" },
+    { label: "Certifications", value: counts?.certifications ?? 0, color: "#facc15" },
   ];
   const cards = [
     ["Projets",      counts?.projects ?? 0,      FolderKanban, "#818cf8"],
@@ -768,6 +795,7 @@ function Dashboard({
     ["Parcours",     counts?.timeline ?? 0,      UserRound,    "#34d399"],
     ["Réseaux",      counts?.socials ?? 0,       Share2,       "#f472b6"],
     ["Services",     counts?.services ?? 0,      Briefcase,    "#fb923c"],
+    ["Certifications", counts?.certifications ?? 0, ShieldCheck, "#facc15"],
     ["Messages",     counts?.messages ?? 0,      Mail,         "#f59e0b"],
     ["Non lus",      counts?.unreadMessages ?? 0, Mail,        "#f87171"],
   ] as const;
@@ -1133,7 +1161,7 @@ function ContentManager({
   const uploadCover = async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
-    const response = await fetch(`${API}/admin/upload`, {
+    const response = await fetch(`${API}/admin/upload-document`, {
       method: "POST",
       body: formData,
       credentials: "include",
@@ -1150,6 +1178,19 @@ function ContentManager({
       data: { ...editing.data, coverImage: result.url },
     });
     setNotice("Image de couverture chargée.");
+  };
+  const uploadCertificationDocument = async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const response = await fetch(`${API}/admin/upload-document`, {
+      method: "POST",
+      body: formData,
+      credentials: "include",
+    });
+    const result = (await response.json().catch(() => null)) as { url?: string; error?: string } | null;
+    if (!response.ok || !result?.url) throw new Error(result?.error ?? "Téléversement du certificat impossible.");
+    updateData({ documentUrl: result.url });
+    setNotice("Certificat PDF ajouté à la fiche.");
   };
   const updateData = (patch: Record<string, unknown>) => {
     if (!editing) return;
@@ -1313,6 +1354,17 @@ function ContentManager({
               />
             </label>
           )}
+          {type === "project" && (
+            <label>
+              Réalisation / résultats
+              <textarea
+                value={String(editing.data.details ?? "")}
+                onChange={(event) => updateData({ details: event.target.value })}
+                rows={4}
+                placeholder="Décris la solution mise en place et les résultats réellement observés."
+              />
+            </label>
+          )}
           {type === "social" && (
             <>
               <label>
@@ -1360,6 +1412,49 @@ function ContentManager({
                 }}
               />
             </label>
+          )}
+          {type === "certification" && (
+            <>
+              <label>
+                Organisme certificateur
+                <input
+                  value={String(editing.data.issuer ?? "")}
+                  onChange={(event) => updateData({ issuer: event.target.value })}
+                  placeholder="Nom de l’organisme"
+                />
+              </label>
+              <div className="two-fields">
+                <label>
+                  Date d’obtention
+                  <input
+                    value={String(editing.data.date ?? "")}
+                    onChange={(event) => updateData({ date: event.target.value })}
+                    placeholder="2026"
+                  />
+                </label>
+                <label>
+                  Lien de vérification
+                  <input
+                    type="url"
+                    value={String(editing.data.url ?? "")}
+                    onChange={(event) => updateData({ url: event.target.value })}
+                    placeholder="https://..."
+                  />
+                </label>
+              </div>
+              <label className="upload-field">
+                Document de certification (PDF)
+                <input
+                  type="file"
+                  accept="application/pdf,.pdf"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    if (file) void uploadCertificationDocument(file).catch((cause) => setNotice(cause instanceof Error ? cause.message : "Téléversement impossible."));
+                  }}
+                />
+                {typeof editing.data.documentUrl === "string" && <a href={editing.data.documentUrl} target="_blank" rel="noreferrer">Aperçu du certificat ↗</a>}
+              </label>
+            </>
           )}
           <div className="check-row">
             <label>
@@ -1748,6 +1843,20 @@ function SingletonEditor({
     }
   };
 
+  const uploadCv = async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const response = await fetch(`${API}/admin/upload-document`, {
+      method: "POST",
+      body: formData,
+      credentials: "include",
+    });
+    const result = (await response.json().catch(() => null)) as { url?: string; error?: string } | null;
+    if (!response.ok || !result?.url) throw new Error(result?.error ?? "Téléversement du CV impossible.");
+    setData((prev) => ({ ...prev, cvUrl: result.url }));
+    setNotice("CV téléversé. Enregistre le profil pour publier le lien.");
+  };
+
   if (loading) {
     return (
       <section className="admin-content">
@@ -1768,6 +1877,32 @@ function SingletonEditor({
           </div>
         </div>
         <p>Ces données seront disponibles pour le portfolio public.</p>
+
+        {endpoint === "profile" && (
+          <div className="cover-field">
+            <label>
+              Lien du CV (PDF)
+              <input
+                type="url"
+                value={String(data.cvUrl ?? "")}
+                onChange={(event) => updateField("cvUrl", event.target.value)}
+                placeholder="https://.../cv.pdf"
+              />
+            </label>
+            <label className="upload-field">
+              Téléverser mon CV (PDF, 5 Mo maximum)
+              <input
+                type="file"
+                accept="application/pdf,.pdf"
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (file) void uploadCv(file).catch((cause) => setNotice(cause instanceof Error ? cause.message : "Téléversement impossible."));
+                }}
+              />
+            </label>
+            {typeof data.cvUrl === "string" && data.cvUrl && <a href={data.cvUrl} target="_blank" rel="noreferrer">Aperçu du CV ↗</a>}
+          </div>
+        )}
         
         <div style={{ display: "grid", gap: "16px", marginTop: "16px" }}>
           {Object.entries(data).map(([key, val]) => (

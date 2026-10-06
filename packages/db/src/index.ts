@@ -86,6 +86,13 @@ const dbReady = Promise.race([
           created_at TIMESTAMPTZ NOT NULL,
           is_read BOOLEAN NOT NULL DEFAULT FALSE
         );
+        CREATE TABLE IF NOT EXISTS public_documents (
+          id BIGSERIAL PRIMARY KEY,
+          file_name TEXT NOT NULL,
+          content_type TEXT NOT NULL,
+          data BYTEA NOT NULL,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
       `);
       // Safe migration: widen expires_at to BIGINT if it was created as INT.
       await pool.query(`
@@ -110,7 +117,7 @@ async function getPool() {
   return pool;
 }
 
-export type CmsContentType = "skill" | "technology" | "project" | "timeline" | "social" | "service";
+export type CmsContentType = "skill" | "technology" | "project" | "timeline" | "social" | "service" | "certification";
 
 export type CmsItem = {
   id: number;
@@ -266,6 +273,25 @@ export async function deleteCmsItem(id: number) {
   return result.rowCount !== 0;
 }
 
+export async function storePublicDocument(fileName: string, contentType: string, data: Buffer) {
+  const pg = await getPool();
+  const result = await pg.query(
+    "INSERT INTO public_documents (file_name, content_type, data) VALUES ($1, $2, $3) RETURNING id",
+    [fileName, contentType, data],
+  );
+  return String(result.rows[0].id);
+}
+
+export async function getPublicDocument(id: string) {
+  const pg = await getPool();
+  const result = await pg.query(
+    "SELECT file_name, content_type, data FROM public_documents WHERE id = $1",
+    [id],
+  );
+  const row = result.rows[0] as { file_name: string; content_type: string; data: Buffer } | undefined;
+  return row ?? null;
+}
+
 export async function getPublicCmsData() {
   const items = await listCmsItems();
   const isPlaceholderItem = (item: CmsItem) => {
@@ -290,6 +316,7 @@ export async function getPublicCmsData() {
     timeline: publicItems.filter((item) => item.type === "timeline"),
     socials: publicItems.filter((item) => item.type === "social"),
     services: publicItems.filter((item) => item.type === "service"),
+    certifications: publicItems.filter((item) => item.type === "certification"),
   };
 }
 

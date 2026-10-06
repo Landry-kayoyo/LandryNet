@@ -1,5 +1,5 @@
 import { createHash, randomBytes, scrypt as scryptCallback, timingSafeEqual } from "node:crypto";
-import { mkdirSync, renameSync, unlinkSync } from "node:fs";
+import { mkdirSync, renameSync, unlinkSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { promisify } from "node:util";
 import { Router } from "express";
@@ -21,6 +21,7 @@ import {
   updateCmsItem,
   updateSingleton,
   getSingleton,
+  storePublicDocument,
 } from "@workspace/db";
 
 const scrypt = promisify(scryptCallback);
@@ -66,6 +67,11 @@ const upload = multer({
   dest: uploadDirectory,
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (_req, file, callback) => callback(null, file.mimetype.startsWith("image/")),
+});
+const pdfUpload = multer({
+  dest: uploadDirectory,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, callback) => callback(null, file.mimetype === "application/pdf"),
 });
 
 function tokenHash(token: string) {
@@ -217,6 +223,25 @@ router.post("/upload", requireAdmin, upload.single("file"), async (req: any, res
   }
 });
 
+router.post("/upload-document", requireAdmin, pdfUpload.single("file"), async (req: any, res: any, next: any) => {
+  if (!req.file) {
+    res.status(400).json({ error: "Un document PDF valide est requis." });
+    return;
+  }
+  try {
+    const originalPath = resolve(uploadDirectory, req.file.filename);
+    const fileName = (req.file.originalname || "document.pdf").replace(/[^a-zA-Z0-9._-]/g, "_").slice(-120);
+    const documentId = await storePublicDocument(fileName, "application/pdf", readFileSync(originalPath));
+    unlinkSync(originalPath);
+    const baseUrl = process.env.VERCEL
+      ? process.env.VITE_API_URL || "/api"
+      : `http://localhost:${process.env.PORT || 5000}/api`;
+    res.status(201).json({ url: `${baseUrl.replace(/\/$/, "")}/documents/${documentId}` });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.get("/dashboard", requireAdmin, async (req: any, res: any, next: any) => {
  try {
   const monthCount = Math.min(24, Math.max(1, Number(req.query.months) || 6));
@@ -246,6 +271,7 @@ router.get("/dashboard", requireAdmin, async (req: any, res: any, next: any) => 
       timeline: items.filter((item) => item.type === "timeline").length,
       socials: items.filter((item) => item.type === "social").length,
       services: items.filter((item) => item.type === "service").length,
+      certifications: items.filter((item) => item.type === "certification").length,
       messages: messages.length,
       unreadMessages: messages.filter((message) => !message.is_read).length,
       evolution,

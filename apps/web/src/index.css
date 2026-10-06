@@ -407,6 +407,29 @@
   transform: translateY(-2px);
 }
 
+.header-cv {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: .35rem;
+  margin-left: .65rem;
+  padding: .48rem .8rem;
+  border-radius: 999px;
+  background: var(--lime);
+  color: var(--ink);
+  font-family: var(--app-font-mono);
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  transition: transform 180ms ease, background 180ms ease;
+}
+
+.header-cv:hover {
+  transform: translateY(-2px);
+  background: var(--paper);
+}
+
 .menu-toggle {
   display: none;
   width: 40px;
@@ -541,6 +564,10 @@
   margin-top: 2rem;
   padding-top: 1.5rem;
   border-top: 1px solid var(--line-dark);
+}
+
+.mobile-menu nav a.mobile-menu-cv {
+  color: var(--lime);
 }
 
 .mobile-menu-cta {
@@ -953,6 +980,10 @@
   line-height: 1.75;
 }
 
+.about-cv-button {
+  margin-top: 1.5rem;
+}
+
 .about-page-hero img {
   width: 100%;
   height: 480px;
@@ -1118,6 +1149,12 @@
   .about-page-hero img {
     height: 380px;
     margin-top: 3rem;
+  }
+
+  .hero-actions .button-outline {
+    min-height: 44px;
+    padding-inline: .8rem;
+    font-size: .58rem;
   }
 
   .about-page-content {
@@ -2433,15 +2470,19 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: .4rem;
+  gap: .5rem;
+  min-width: 0;
 }
 
 .footer-socials a {
   display: inline-flex;
+  flex: 0 1 auto;
   align-items: center;
+  justify-content: center;
   gap: .4rem;
+  min-height: 42px;
   border: 1px solid var(--line-dark);
-  padding: .55rem .65rem;
+  padding: .55rem .75rem;
   color: rgba(238, 239, 226, .62);
   transition: color 180ms ease, border-color 180ms ease, transform 180ms ease;
 }
@@ -2454,6 +2495,14 @@
 
 .footer-socials span {
   font-size: var(--text-micro);
+  line-height: 1.2;
+}
+
+.footer-social-icon {
+  display: block;
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
 }
 
 .footer-end {
@@ -2555,7 +2604,8 @@
 @media (max-width: 800px) {
 
   .desktop-nav,
-  .header-contact {
+  .header-contact,
+  .header-cv {
     display: none;
   }
 
@@ -2831,7 +2881,7 @@
 
   .footer-socials {
     grid-column: 1 / -1;
-    width: auto;
+    width: 100%;
     margin-top: .25rem;
   }
 
