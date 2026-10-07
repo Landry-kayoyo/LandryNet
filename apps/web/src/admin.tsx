@@ -9,6 +9,7 @@ import {
   BarChart3,
   Bot,
   Briefcase,
+  ChevronDown,
   FileText,
   FolderKanban,
   Globe2,
@@ -18,6 +19,7 @@ import {
   Menu,
   Plus,
   Save,
+  Search,
   SendHorizontal,
   Share2,
   ShieldCheck,
@@ -1978,6 +1980,27 @@ function Messages({
   reload: () => void;
   setNotice: (notice: string) => void;
 }) {
+  const [expandedMessageId, setExpandedMessageId] = useState<number | null>(null);
+  const [replyDraft, setReplyDraft] = useState("");
+  const [sendingReplyId, setSendingReplyId] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [messageFilter, setMessageFilter] = useState<"all" | "unread">("all");
+  const unreadCount = messages.filter((message) => !message.is_read).length;
+  const normalizedQuery = searchQuery.trim().toLocaleLowerCase("fr");
+  const visibleMessages = messages.filter((message) => {
+    if (messageFilter === "unread" && message.is_read) return false;
+    if (!normalizedQuery) return true;
+    const replies = Array.isArray(message.replies) ? message.replies : [];
+    const searchableText = [
+      message.name,
+      message.email,
+      message.subject,
+      message.message,
+      ...replies.map((reply) => (reply as Record<string, unknown>).body),
+    ].map((value) => String(value ?? "").toLocaleLowerCase("fr")).join(" ");
+    return searchableText.includes(normalizedQuery);
+  });
+
   const toggle = async (id: number, isRead: boolean) => {
     await request(`/admin/messages/${id}/read`, {
       method: "PATCH",
@@ -1991,46 +2014,192 @@ function Messages({
     await request(`/admin/messages/${id}`, { method: "DELETE" });
     reload();
   };
+
+  const sendReply = async (event: FormEvent<HTMLFormElement>, id: number) => {
+    event.preventDefault();
+    const reply = replyDraft.trim();
+    if (!reply || sendingReplyId !== null) return;
+    setSendingReplyId(id);
+    try {
+      await request(`/admin/messages/${id}/reply`, {
+        method: "POST",
+        body: JSON.stringify({ reply }),
+      });
+      setReplyDraft("");
+      setNotice("Réponse envoyée par e-mail et conservée dans la conversation.");
+      reload();
+    } catch (cause) {
+      setNotice(cause instanceof Error ? cause.message : "Envoi de la réponse impossible.");
+    } finally {
+      setSendingReplyId(null);
+    }
+  };
+
   return (
     <section className="admin-content">
+      <div className="messages-toolbar">
+        <div className="messages-toolbar-summary">
+          <strong>{messages.length}</strong>
+          <span>{messages.length > 1 ? "messages" : "message"} reçus</span>
+          <span className="messages-toolbar-unread">
+            {unreadCount} non lu{unreadCount > 1 ? "s" : ""}
+          </span>
+        </div>
+        <div className="messages-toolbar-controls">
+          <label className="message-search">
+            <Search size={17} aria-hidden="true" />
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Rechercher un message…"
+              aria-label="Rechercher un message"
+            />
+          </label>
+          <div className="message-filter-tabs" role="group" aria-label="Filtrer les messages">
+            <button
+              type="button"
+              className={messageFilter === "all" ? "is-active" : ""}
+              aria-pressed={messageFilter === "all"}
+              onClick={() => setMessageFilter("all")}
+            >
+              Tous <span>{messages.length}</span>
+            </button>
+            <button
+              type="button"
+              className={messageFilter === "unread" ? "is-active" : ""}
+              aria-pressed={messageFilter === "unread"}
+              onClick={() => setMessageFilter("unread")}
+            >
+              Non lus <span>{unreadCount}</span>
+            </button>
+          </div>
+        </div>
+      </div>
       <div className="messages-list">
-        {messages.map((message) => (
-          <article
-            className={
-              !message.is_read ? "message-card is-unread" : "message-card"
-            }
-            key={String(message.id)}
-          >
-            <div className="message-meta">
-              <span>
-                {String(message.name)} · {String(message.email)}
-              </span>
-              <small>
-                {new Date(String(message.created_at)).toLocaleString("fr-FR")}
-              </small>
-            </div>
-            <h3>{String(message.subject)}</h3>
-            <p>{String(message.message)}</p>
-            <div className="row-actions">
+        {visibleMessages.map((message) => {
+          const id = Number(message.id);
+          const isExpanded = expandedMessageId === id;
+          const replies = Array.isArray(message.replies)
+            ? (message.replies as Record<string, unknown>[])
+            : [];
+          const sender = String(message.name ?? "Contact");
+          const createdAt = new Date(String(message.created_at));
+
+          return (
+            <article
+              className={[
+                "message-card",
+                !message.is_read ? "is-unread" : "",
+                isExpanded ? "is-expanded" : "",
+              ].filter(Boolean).join(" ")}
+              key={String(message.id)}
+            >
               <button
-                className="text-button"
-                onClick={() =>
-                  void toggle(Number(message.id), Boolean(message.is_read))
-                }
+                className="message-card-trigger"
+                type="button"
+                aria-expanded={isExpanded}
+                aria-controls={`message-detail-${id}`}
+                onClick={() => {
+                  setExpandedMessageId(isExpanded ? null : id);
+                  setReplyDraft("");
+                }}
               >
-                {message.is_read ? "Marquer non lu" : "Marquer lu"}
+                <span className="message-avatar" aria-hidden="true">
+                  {sender.trim().charAt(0).toUpperCase() || "?"}
+                </span>
+                <span className="message-card-main">
+                  <span className="message-card-topline">
+                    <strong>{sender}</strong>
+                    <time dateTime={createdAt.toISOString()}>
+                      {createdAt.toLocaleString("fr-FR")}
+                    </time>
+                  </span>
+                  <span className="message-card-subject">{String(message.subject ?? "Sans objet")}</span>
+                  <span className="message-card-preview">{String(message.message ?? "")}</span>
+                  <span className="message-card-bottomline">
+                    <span className={!message.is_read ? "message-status is-unread" : "message-status"}>
+                      {!message.is_read ? "Non lu" : "Reçu"}
+                    </span>
+                    {replies.length > 0 && (
+                      <span className="message-reply-count">
+                        {replies.length} réponse{replies.length > 1 ? "s" : ""}
+                      </span>
+                    )}
+                    <span className="message-open-label">{isExpanded ? "Fermer" : "Lire et répondre"}</span>
+                  </span>
+                </span>
+                <ChevronDown className="message-expand-icon" size={19} aria-hidden="true" />
               </button>
-              <button
-                className="icon-button danger"
-                onClick={() => void remove(Number(message.id))}
-              >
-                <Trash2 size={16} />
-              </button>
-            </div>
-          </article>
-        ))}
-        {messages.length === 0 && (
-          <div className="empty-table">Aucun message reçu.</div>
+
+              {isExpanded && (
+                <div className="message-expanded" id={`message-detail-${id}`}>
+                  <div className="message-full-content">
+                    <div className="message-full-heading">
+                      <strong>Message complet</strong>
+                      <span>{String(message.email)}</span>
+                    </div>
+                    <p>{String(message.message ?? "")}</p>
+                  </div>
+
+                  {replies.length > 0 && (
+                    <div className="message-replies">
+                      <strong>Historique des réponses</strong>
+                      {replies.map((reply, index) => (
+                        <div className="message-reply" key={`${id}-reply-${index}`}>
+                          <small>
+                            {reply.sentAt
+                              ? new Date(String(reply.sentAt)).toLocaleString("fr-FR")
+                              : "Réponse envoyée"}
+                          </small>
+                          <p>{String(reply.body ?? "")}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <form className="message-reply-form" onSubmit={(event) => void sendReply(event, id)}>
+                    <label htmlFor={`message-reply-${id}`}>
+                      Ta réponse à {sender} <span>· {String(message.email)}</span>
+                    </label>
+                    <textarea
+                      id={`message-reply-${id}`}
+                      value={replyDraft}
+                      onChange={(event) => setReplyDraft(event.target.value)}
+                      placeholder="Écris ta réponse…"
+                      rows={4}
+                      maxLength={10000}
+                      required
+                      disabled={sendingReplyId === id}
+                    />
+                    <div className="message-expanded-actions">
+                      <button className="admin-button" type="submit" disabled={sendingReplyId === id || !replyDraft.trim()}>
+                        <SendHorizontal size={16} />
+                        {sendingReplyId === id ? "Envoi…" : "Envoyer la réponse"}
+                      </button>
+                      <button
+                        className="text-button"
+                        type="button"
+                        onClick={() => void toggle(id, Boolean(message.is_read))}
+                      >
+                        {message.is_read ? "Marquer non lu" : "Marquer lu"}
+                      </button>
+                      <button className="text-button danger-text-button" type="button" onClick={() => void remove(id)}>
+                        Supprimer
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
+            </article>
+          );
+        })}
+        {visibleMessages.length === 0 && (
+          <div className="messages-empty">
+            <Mail size={24} aria-hidden="true" />
+            <strong>{messages.length === 0 ? "Aucun message reçu" : "Aucun résultat"}</strong>
+            <span>{messages.length === 0 ? "Les nouveaux messages apparaîtront ici." : "Modifie la recherche ou le filtre."}</span>
+          </div>
         )}
       </div>
     </section>

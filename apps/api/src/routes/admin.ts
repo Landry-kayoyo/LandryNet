@@ -10,12 +10,14 @@ import {
   createAdminSession,
   createAdminUser,
   createCmsItem,
+  addContactMessageReply,
   db,
   deleteAdminSession,
   deleteCmsItem,
   deleteContactMessage,
   getAdminSession,
   getAdminUser,
+  getContactMessage,
   listCmsItems,
   listContactMessages,
   markContactMessageRead,
@@ -24,6 +26,7 @@ import {
   getSingleton,
   storePublicDocument,
 } from "@workspace/db";
+import { createMailer, escapeHtml, getMailFrom } from "../lib/mailer.js";
 
 const scrypt = promisify(scryptCallback);
 const router = Router();
@@ -517,6 +520,61 @@ router.get("/messages", requireAdmin, async (req: any, res: any, next: any) => {
   const messages = (await listContactMessages(!unreadOnly)).filter((message) => !query || [message.name, message.email, message.subject, message.message].some((value) => String(value).toLowerCase().includes(query)));
   res.json(messages);
  } catch (error) { next(error); }
+});
+
+router.post("/messages/:id/reply", requireAdmin, async (req: any, res: any, next: any) => {
+  const id = Number(req.params.id);
+  const reply = typeof req.body?.reply === "string" ? req.body.reply.trim() : "";
+  if (!Number.isInteger(id) || id <= 0 || !reply || reply.length > 10000) {
+    res.status(400).json({ error: "Une réponse de 1 à 10 000 caractères est requise." });
+    return;
+  }
+
+  try {
+    const message = await getContactMessage(id);
+    if (!message) {
+      res.status(404).json({ error: "Message introuvable." });
+      return;
+    }
+
+    const mailer = createMailer();
+    const sender = getMailFrom();
+    if (!mailer || !sender) {
+      res.status(503).json({ error: "L’envoi e-mail n’est pas configuré. La réponse n’a pas été envoyée." });
+      return;
+    }
+
+    const recipient = String(message.email);
+    const subject = String(message.subject);
+    const originalMessage = String(message.message);
+    const replySubject = /^re\s*:/i.test(subject) ? subject : `Re: ${subject}`;
+    const safeReply = escapeHtml(reply).replace(/\r?\n/g, "<br>");
+    const safeOriginal = escapeHtml(originalMessage).replace(/\r?\n/g, "<br>");
+
+    try {
+      await mailer.sendMail({
+        from: sender,
+        to: recipient,
+        replyTo: process.env.CONTACT_EMAIL ?? process.env.SMTP_USER,
+        subject: replySubject,
+        text: `${reply}\n\n--- Message initial ---\n${originalMessage}`,
+        html: `<div>${safeReply}</div><hr><p><strong>Message initial :</strong></p><blockquote>${safeOriginal}</blockquote>`,
+      });
+    } catch {
+      res.status(502).json({ error: "L’envoi de la réponse a échoué. Vérifie la configuration SMTP ; la réponse n’a pas été enregistrée." });
+      return;
+    }
+
+    const sentAt = new Date().toISOString();
+    const stored = await addContactMessageReply(id, { body: reply, from: sender, sentAt });
+    if (!stored) {
+      res.status(404).json({ error: "Le message a été envoyé, mais l’historique de réponse n’a pas pu être enregistré." });
+      return;
+    }
+    res.status(201).json({ status: "sent", sentAt });
+  } catch (error) {
+    next(error);
+  }
 });
 
 router.patch("/messages/:id/read", requireAdmin, async (req: any, res: any, next: any) => {

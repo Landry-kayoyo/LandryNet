@@ -52,4 +52,5 @@ export const postgresContactMessagesTable = pgTable("contact_messages", {
   message: text("message").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
   isRead: boolean("is_read").notNull().default(false),
+  replies: jsonb("replies").notNull().default([]),
 });

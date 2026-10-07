@@ -95,13 +95,22 @@ export function PublicationPage() {
 
       <section className="publication-page-hero">
         {typeof project.data.coverImage === 'string' && project.data.coverImage ? (
-          <img
-            className="publication-page-cover"
-            src={project.data.coverImage}
-            alt={`Couverture du projet ${project.title} – Landry Kayoyo, infrastructure IT et réseaux`}
-            fetchPriority="high"
-            decoding="async"
-          />
+          <div className="publication-page-cover-stage">
+            <img
+              className="publication-page-cover-backdrop"
+              src={project.data.coverImage}
+              alt=""
+              aria-hidden="true"
+              decoding="async"
+            />
+            <img
+              className="publication-page-cover"
+              src={project.data.coverImage}
+              alt={`Couverture du projet ${project.title} – Landry Kayoyo, infrastructure IT et réseaux`}
+              fetchPriority="high"
+              decoding="async"
+            />
+          </div>
         ) : (
           <div className="publication-page-cover-placeholder" role="img" aria-label={`Visuel du projet ${project.title}`}>
             <span>LANDRY / NET <i /> PUBLICATION</span>

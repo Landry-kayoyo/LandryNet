@@ -1,21 +1,8 @@
 import { Router } from "express";
-import nodemailer from "nodemailer";
 import { createContactMessage } from "@workspace/db";
+import { createMailer, escapeHtml, getMailFrom } from "../lib/mailer.js";
 
 const router = Router();
-
-function createMailer() {
-  const host = process.env.SMTP_HOST;
-  const user = process.env.SMTP_USER;
-  const password = process.env.SMTP_PASSWORD;
-  if (!host || !user || !password) return null;
-  return nodemailer.createTransport({
-    host,
-    port: Number(process.env.SMTP_PORT ?? 587),
-    secure: process.env.SMTP_SECURE === "true",
-    auth: { user, pass: password },
-  });
-}
 
 router.post("/contact", async (req: any, res: any, next: any) => {
   const { nom, email, sujet, message } = req.body ?? {};
@@ -34,17 +21,18 @@ router.post("/contact", async (req: any, res: any, next: any) => {
     await createContactMessage(contact);
     const mailer = createMailer();
     const recipient = process.env.CONTACT_EMAIL ?? process.env.SMTP_USER;
-    if (!mailer || !recipient) {
+    const sender = getMailFrom();
+    if (!mailer || !recipient || !sender) {
       res.status(503).json({ error: "Le service e-mail n'est pas encore configuré. Le message a été conservé dans l'espace d'administration." });
       return;
     }
     await mailer.sendMail({
-      from: process.env.SMTP_FROM ?? process.env.SMTP_USER,
+      from: sender,
       to: recipient,
       replyTo: contact.email,
       subject: `[Portfolio] ${contact.subject}`,
       text: `Nom: ${contact.name}\nE-mail: ${contact.email}\n\n${contact.message}`,
-      html: `<p><strong>Nom :</strong> ${contact.name}</p><p><strong>E-mail :</strong> ${contact.email}</p><p>${contact.message.replace(/\n/g, "<br>")}</p>`,
+      html: `<p><strong>Nom :</strong> ${escapeHtml(contact.name)}</p><p><strong>E-mail :</strong> ${escapeHtml(contact.email)}</p><p>${escapeHtml(contact.message).replace(/\r?\n/g, "<br>")}</p>`,
     });
     res.status(201).json({ status: "sent" });
   } catch (error) {

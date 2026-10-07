@@ -2,7 +2,7 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
 
-const repoRoot = resolve(fileURLToPath(new URL("../..", import.meta.url)));
+const repoRoot = resolve(fileURLToPath(new URL("../../..", import.meta.url)));
 
 for (const envFile of [".env.vercel.local", ".env.production", ".env.local", ".env"]) {
   try {
@@ -84,7 +84,8 @@ const dbReady = Promise.race([
           subject TEXT NOT NULL,
           message TEXT NOT NULL,
           created_at TIMESTAMPTZ NOT NULL,
-          is_read BOOLEAN NOT NULL DEFAULT FALSE
+          is_read BOOLEAN NOT NULL DEFAULT FALSE,
+          replies JSONB NOT NULL DEFAULT '[]'::jsonb
         );
         CREATE TABLE IF NOT EXISTS public_documents (
           id BIGSERIAL PRIMARY KEY,
@@ -93,6 +94,10 @@ const dbReady = Promise.race([
           data BYTEA NOT NULL,
           created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         );
+      `);
+      await pool.query(`
+        ALTER TABLE IF EXISTS contact_messages
+          ADD COLUMN IF NOT EXISTS replies JSONB NOT NULL DEFAULT '[]'::jsonb;
       `);
       // Safe migration: widen expires_at to BIGINT if it was created as INT.
       await pool.query(`
@@ -343,11 +348,34 @@ export async function updateSingleton(
 export async function listContactMessages(includeRead = true) {
   const pg = await getPool();
   const result = await pg.query(
-    `SELECT id, name, email, subject, message, created_at, is_read FROM contact_messages${
+    `SELECT id, name, email, subject, message, created_at, is_read, replies FROM contact_messages${
       includeRead ? "" : " WHERE is_read = FALSE"
     } ORDER BY created_at DESC`
   );
   return result.rows as Record<string, unknown>[];
+}
+
+export async function getContactMessage(id: number) {
+  const pg = await getPool();
+  const result = await pg.query(
+    "SELECT id, name, email, subject, message FROM contact_messages WHERE id = $1",
+    [id]
+  );
+  return (result.rows[0] as Record<string, unknown> | undefined) ?? null;
+}
+
+export async function addContactMessageReply(
+  id: number,
+  reply: { body: string; from: string; sentAt: string }
+) {
+  const pg = await getPool();
+  const result = await pg.query(
+    `UPDATE contact_messages
+     SET replies = COALESCE(replies, '[]'::jsonb) || jsonb_build_array($2::jsonb), is_read = TRUE
+     WHERE id = $1`,
+    [id, JSON.stringify(reply)]
+  );
+  return result.rowCount !== 0;
 }
 
 export async function markContactMessageRead(id: number, isRead: boolean) {
