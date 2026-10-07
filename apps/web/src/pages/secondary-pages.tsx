@@ -349,25 +349,42 @@ export function AboutPage() {
             <SectionKicker index="04">Certifications</SectionKicker>
             <h2>Certifications professionnelles</h2>
           </div>
-          <div className="skill-groups">
-            <article className="skill-group">
-              <ul>
-                {data.certifications.map((certification) => (
-                  <li key={certification.id}>
-                    <strong>{certification.title}</strong>
-                    {typeof certification.data.issuer === 'string' && <p>{certification.data.issuer}</p>}
-                    {typeof certification.data.date === 'string' && <p>{certification.data.date}</p>}
-                    {typeof certification.data.description === 'string' && <p>{certification.data.description}</p>}
-                    {typeof certification.data.url === 'string' && certification.data.url && (
-                      <a href={certification.data.url} target="_blank" rel="noreferrer">Voir le certificat ↗</a>
-                    )}
-                    {typeof certification.data.documentUrl === 'string' && certification.data.documentUrl && (
-                      <a href={certification.data.documentUrl} target="_blank" rel="noreferrer">Ouvrir le document ↗</a>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </article>
+          <div className="about-certification-list">
+            {data.certifications.map((certification, index) => {
+              const certificateUrl = typeof certification.data.url === 'string' ? certification.data.url : '';
+              const documentUrl = typeof certification.data.documentUrl === 'string' ? certification.data.documentUrl : '';
+
+              return (
+                <article className="about-certification-item" key={certification.id}>
+                  <div className="about-certification-header">
+                    <span className="about-certification-index">{String(index + 1).padStart(2, '0')}</span>
+                    <div className="about-certification-copy">
+                      <h3>{certification.title}</h3>
+                      {typeof certification.data.issuer === 'string' && certification.data.issuer && <p>{certification.data.issuer}</p>}
+                      {typeof certification.data.date === 'string' && certification.data.date && <p>{certification.data.date}</p>}
+                      {typeof certification.data.description === 'string' && certification.data.description && (
+                        <p>{certification.data.description}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {(certificateUrl || documentUrl) && (
+                    <div className="about-certification-actions">
+                      {certificateUrl && (
+                        <a className="about-certification-link" href={certificateUrl} target="_blank" rel="noreferrer">
+                          Voir le certificat ↗
+                        </a>
+                      )}
+                      {documentUrl && (
+                        <a className="about-certification-link about-certification-link-secondary" href={documentUrl} target="_blank" rel="noreferrer">
+                          Ouvrir le document ↗
+                        </a>
+                      )}
+                    </div>
+                  )}
+                </article>
+              );
+            })}
           </div>
         </section>
       )}

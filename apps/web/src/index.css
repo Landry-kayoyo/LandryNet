@@ -1174,6 +1174,92 @@
   line-height: 1.5;
 }
 
+.about-certification-list {
+  display: grid;
+  gap: 1.25rem;
+  margin-top: 2.5rem;
+}
+
+.about-certification-item {
+  display: grid;
+  gap: 1.1rem;
+  padding: 1.4rem 1.2rem 1.2rem;
+  border: 1px solid var(--line-light);
+  border-left: 4px solid #c8eb4e;
+  background: rgba(255, 255, 255, .42);
+  box-shadow: 0 12px 30px rgba(13, 17, 24, .02);
+}
+
+.about-certification-header {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.about-certification-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: .3rem;
+  color: #147fa8;
+  font-family: var(--app-font-mono);
+  font-size: .7rem;
+  letter-spacing: .14em;
+}
+
+.about-certification-copy {
+  min-width: 0;
+}
+
+.about-certification-copy h3 {
+  margin: 0;
+  font-family: var(--app-font-display);
+  font-size: clamp(1.7rem, 2.6vw, 2.5rem);
+  letter-spacing: -.07em;
+  line-height: 1.05;
+}
+
+.about-certification-copy p {
+  margin: .35rem 0 0;
+  color: rgba(13, 17, 24, .72);
+  font-size: .97rem;
+  line-height: 1.6;
+}
+
+.about-certification-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem;
+  margin-left: 58px;
+}
+
+.about-certification-link {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .62rem .9rem;
+  border: 1px solid rgba(20, 127, 168, .2);
+  background: rgba(20, 127, 168, .04);
+  color: #0e3a53;
+  font-family: var(--app-font-mono);
+  font-size: .68rem;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+}
+
+.about-certification-link:hover {
+  transform: translateY(-1px);
+  border-color: rgba(20, 127, 168, .35);
+  background: rgba(20, 127, 168, .08);
+}
+
+.about-certification-link-secondary {
+  border-color: rgba(13, 17, 24, .14);
+  background: rgba(13, 17, 24, .02);
+}
+
 @media (max-width: 800px) {
   .about-page-hero {
     display: block;
@@ -1200,6 +1286,19 @@
   .about-skills,
   .about-technologies {
     margin-top: 5rem;
+  }
+
+  .about-certification-item {
+    padding: 1.15rem .9rem .95rem;
+  }
+
+  .about-certification-header {
+    grid-template-columns: 36px minmax(0, 1fr);
+    gap: .75rem;
+  }
+
+  .about-certification-actions {
+    margin-left: 0;
   }
 
   .skill-groups,
