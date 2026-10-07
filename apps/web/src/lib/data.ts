@@ -74,7 +74,11 @@ export const collagePhotos = [
 import brandLogo from '@assets/optimized/brand-logo.webp';
 export const defaultCover = brandLogo;
 export const siteUrl = import.meta.env.VITE_SITE_URL || 'https://landrynet.vercel.app';
-export const contactEmail = import.meta.env.VITE_CONTACT_EMAIL || 'kayoyolandry@gmail.com';
+const preferredContactEmail = 'kayoyolandry@gmail.com';
+export const contactEmail =
+  import.meta.env.VITE_CONTACT_EMAIL === 'hello@landrynet.vercel.app'
+    ? preferredContactEmail
+    : import.meta.env.VITE_CONTACT_EMAIL || preferredContactEmail;
 export const apiBaseUrl =
   import.meta.env.VITE_API_URL ??
   (typeof window !== 'undefined' &&
