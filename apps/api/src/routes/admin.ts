@@ -137,11 +137,12 @@ async function uploadToCloudinary(file: Express.Multer.File, folder: string, res
 
   const buffer = readFileSync(file.path);
   const publicId = `${Date.now()}-${sanitizeFileName(file.originalname || "upload", "upload")}`;
+  const rootFolder = (process.env.CLOUDINARY_FOLDER || "landry-net").replace(/^\/+|\/+$/g, "");
 
   const result = await new Promise<{ secure_url: string; public_id: string }>((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       {
-        folder: process.env.CLOUDINARY_FOLDER || folder,
+        folder: `${rootFolder}/${folder}`,
         resource_type: resourceType,
         public_id: publicId,
         overwrite: false,
@@ -266,7 +267,15 @@ router.post("/upload", requireAdmin, upload.single("file"), async (req: any, res
 
   try {
     const originalPath = resolve(uploadDirectory, req.file.filename);
-    const cloudinaryUrl = await uploadToCloudinary(req.file, "landry-net/images", "image").catch(() => null);
+    let cloudinaryUrl: string | null;
+    try {
+      cloudinaryUrl = await uploadToCloudinary(req.file, "images", "image");
+    } catch (error) {
+      unlinkSync(originalPath);
+      const message = error instanceof Error ? error.message : "Erreur inconnue.";
+      res.status(502).json({ error: `Échec de l’envoi vers Cloudinary : ${message}` });
+      return;
+    }
 
     if (cloudinaryUrl) {
       unlinkSync(originalPath);
@@ -303,7 +312,15 @@ router.post("/upload-document", requireAdmin, pdfUpload.single("file"), async (r
 
   try {
     const originalPath = resolve(uploadDirectory, req.file.filename);
-    const cloudinaryUrl = await uploadToCloudinary(req.file, "landry-net/documents", "raw").catch(() => null);
+    let cloudinaryUrl: string | null;
+    try {
+      cloudinaryUrl = await uploadToCloudinary(req.file, "documents", "raw");
+    } catch (error) {
+      unlinkSync(originalPath);
+      const message = error instanceof Error ? error.message : "Erreur inconnue.";
+      res.status(502).json({ error: `Échec de l’envoi vers Cloudinary : ${message}` });
+      return;
+    }
 
     if (cloudinaryUrl) {
       unlinkSync(originalPath);

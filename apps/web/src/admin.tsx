@@ -1187,6 +1187,10 @@ function ContentManager({
   };
   const coverImage =
     type === "project" ? String(editing?.data.coverImage ?? "") : "";
+  const clearCoverImage = () => {
+    if (!editing) return;
+    updateData({ coverImage: "" });
+  };
   const technologiesValue = Array.isArray(editing?.data.technologies)
     ? editing.data.technologies.map(String)
     : [];
@@ -1283,17 +1287,14 @@ function ContentManager({
           </div>
           {type === "project" && (
             <div className="cover-field">
-              <label>
-                Image de couverture (URL)
-                <input
-                  type="url"
-                  value={coverImage}
-                  placeholder="https://.../image.jpg"
-                  onChange={(event) =>
-                    updateData({ coverImage: event.target.value })
-                  }
-                />
-              </label>
+              <div className="cover-field-header">
+                <span>Image de couverture</span>
+                {coverImage && (
+                  <button type="button" className="tertiary-button" onClick={clearCoverImage}>
+                    Supprimer
+                  </button>
+                )}
+              </div>
               <label className="upload-field">
                 Importer une image
                 <input
@@ -1312,6 +1313,7 @@ function ContentManager({
                   }}
                 />
               </label>
+              <input type="hidden" name="coverImage" value={coverImage} />
               {coverImage && (
                 <img
                   className="cover-preview"
