@@ -58,38 +58,67 @@ const socialIcons = {
 const iconMap = [Server, Network, Activity, ShieldCheck, Terminal] as const;
 
 export default function Home() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [form, setForm] = useState<ContactFields>({ nom: '', email: '', sujet: '', message: '' });
+  const [errors, setErrors] = useState<ContactErrors>({});
+  const [status, setStatus] = useState<FormStatus>('idle');
+  const cmsData = usePublicCmsData();
+  const profile = cmsData.profile;
+  const getProfileText = (...keys: string[]) => {
+    for (const key of keys) {
+      const value = profile[key];
+      if (typeof value === 'string' && value.trim()) return value.trim();
+    }
+    return '';
+  };
+  const profileName = getProfileText('name', 'fullName', 'displayName', 'full_name') || 'Landry Kayoyo';
+  const profileTitle = getProfileText('jobTitle', 'title', 'role', 'poste', 'position') || 'Administrateur systèmes et réseaux';
+  const profileDescription = getProfileText('bio', 'about', 'description', 'summary', 'intro') ||
+    "Landry Kayoyo, administrateur systèmes et réseaux, accompagne les entreprises dans l’infrastructure IT, la sécurité et le monitoring à Lubumbashi.";
+  const profileLocation = getProfileText('location', 'addressLocality', 'city');
+  const profileServiceArea = getProfileText('serviceArea', 'areaServed');
+  const profileKeywords = getProfileText('keywords') || undefined;
+  const socialProfileUrls = cmsData.socials
+    .map((social) => social.data.url)
+    .filter((url): url is string => typeof url === 'string' && /^https?:\/\//i.test(url));
+
   useSeoMeta({
-    title: 'Landry Kayoyo | Administrateur systèmes et réseaux',
-    description:
-      "Landry Kayoyo, administrateur systèmes et réseaux, accompagne les entreprises dans l\u2019infrastructure IT, la sécurité et le monitoring à Lubumbashi.",
+    title: `${profileName} | ${profileTitle}`,
+    description: profileDescription,
     path: '/',
     image: defaultCover,
+    keywords: profileKeywords,
     structuredData: [
       {
         '@context': 'https://schema.org',
         '@type': 'WebSite',
         name: 'Landry Net',
         url: siteUrl,
-        description:
-          'Portfolio de Landry Kayoyo, sous la marque Landry Net, administrateur systèmes et réseaux.',
+        description: `Portfolio de ${profileName} — ${profileTitle}.`,
       },
       {
         '@context': 'https://schema.org',
         '@type': 'Person',
-        name: 'Landry Kayoyo',
-        jobTitle: 'Administrateur systèmes et réseaux',
+        name: profileName,
+        jobTitle: profileTitle,
+        description: profileDescription,
         url: siteUrl,
-        sameAs: ['https://www.linkedin.com', 'https://github.com'],
-        knowsAbout: ['Infrastructure IT', 'Réseaux', 'Sécurité', 'Monitoring', 'Automatisation'],
+        sameAs: socialProfileUrls,
+        knowsAbout: [...new Set([
+          ...cmsData.skills.map((item) => item.title),
+          ...cmsData.technologies.map((item) => item.title),
+        ])],
+        ...(profileLocation ? {
+          address: {
+            '@type': 'PostalAddress',
+            addressLocality: profileLocation,
+            addressCountry: 'CD',
+          },
+        } : {}),
+        ...(profileServiceArea ? { areaServed: profileServiceArea } : {}),
       },
     ],
   });
-
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [form, setForm] = useState<ContactFields>({ nom: '', email: '', sujet: '', message: '' });
-  const [errors, setErrors] = useState<ContactErrors>({});
-  const [status, setStatus] = useState<FormStatus>('idle');
-  const cmsData = usePublicCmsData();
   const cvUrl = [cmsData.profile.cvUrl, cmsData.profile.cv_url, cmsData.profile.resumeUrl, cmsData.profile.resume_url, cmsData.profile.cv, cmsData.profile.resume]
     .find((value): value is string => typeof value === 'string' && value.trim().length > 0)
     ?.trim();

@@ -11,6 +11,7 @@ import {
   Briefcase,
   FileText,
   FolderKanban,
+  Globe2,
   LayoutDashboard,
   LogOut,
   Mail,
@@ -18,7 +19,6 @@ import {
   Plus,
   Save,
   SendHorizontal,
-  Settings,
   Share2,
   ShieldCheck,
   Sparkles,
@@ -59,6 +59,7 @@ type Counts = {
   socials: number;
   services: number;
   certifications: number;
+  publishedContent: number;
   messages: number;
   unreadMessages: number;
   evolution?: EvolutionPoint[];
@@ -319,7 +320,7 @@ function AiChatBubble({ setNotice, onContentChanged }: { setNotice: (msg: string
               <div key={i} className={`ai-msg ${msg.role}${msg.isError ? " error" : ""}`}>
                 {msg.text}
                 {msg.proposals?.map((p, j) => (
-                  <div key={j} style={{ marginTop: 10, padding: 10, background: "rgba(255,255,255,0.05)", borderRadius: 6, border: "1px solid rgba(255,255,255,0.1)" }}>
+                  <div key={j} className="ai-proposal-card">
                     <div style={{ fontWeight: 600, marginBottom: 5 }}>{p.title}</div>
                     <div style={{ fontSize: "0.85em", opacity: 0.8, marginBottom: 10 }}>
                       {p.action === "PROPOSE_UPDATE" ? `Modification du contenu #${p.id}` : `Type : ${p.type}`}
@@ -379,7 +380,7 @@ function AdminApp() {
   const [authenticated, setAuthenticated] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [section, setSection] = useState<
-    "dashboard" | "content" | "profile" | "messages" | "settings" | "ai-settings"
+    "dashboard" | "content" | "profile" | "messages" | "ai-settings"
   >("dashboard");
   const [contentType, setContentType] = useState<ContentType>("project");
   const [counts, setCounts] = useState<Counts | null>(null);
@@ -510,12 +511,6 @@ function AdminApp() {
             ) : null}
           </button>
           <button
-            className={section === "settings" ? "is-active" : ""}
-            onClick={() => nav("settings")}
-          >
-            <Settings size={17} /> Paramètres
-          </button>
-          <button
             className={section === "ai-settings" ? "is-active" : ""}
             onClick={() => nav("ai-settings")}
           >
@@ -546,9 +541,7 @@ function AdminApp() {
                     ? "Boîte de réception"
                     : section === "profile"
                       ? "Profil public"
-                      : section === "settings"
-                        ? "Paramètres du site"
-                        : "Paramètres IA"}
+                      : "Paramètres IA"}
             </h2>
           </div>
           <a href="/" target="_blank" rel="noreferrer" className="view-site">
@@ -587,13 +580,6 @@ function AdminApp() {
           <SingletonEditor
             endpoint="profile"
             title="Informations affichées sur le portfolio"
-            setNotice={setNotice}
-          />
-        )}
-        {section === "settings" && (
-          <SingletonEditor
-            endpoint="settings"
-            title="Réglages publics et SEO"
             setNotice={setNotice}
           />
         )}
@@ -685,13 +671,13 @@ function EvolutionChart({ data }: { data: EvolutionPoint[] }) {
           <line x1="0" y1="86" x2="100" y2="86" />
         </g>
         {!hasAnyData && (
-          <text x="50" y="50" textAnchor="middle" fill="rgba(255,255,255,0.2)" fontSize="5" fontFamily="Syne, sans-serif">
+          <text x="50" y="50" textAnchor="middle" fill="var(--admin-muted)" fontSize="5" fontFamily="Syne, sans-serif">
             Aucune donnée pour cette période
           </text>
         )}
         {/* Vertical hover line */}
         {tooltip && (
-          <line x1={tooltip.x} y1="18" x2={tooltip.x} y2="88" stroke="rgba(255,255,255,0.15)" strokeWidth="0.4" strokeDasharray="2,1" />
+          <line x1={tooltip.x} y1="18" x2={tooltip.x} y2="88" stroke="var(--admin-line)" strokeWidth="0.4" strokeDasharray="2,1" />
         )}
         <path className="evolution-area evolution-area-content" d={areaString("contents")} />
         <path className="evolution-area evolution-area-messages" d={areaString("messages")} />
@@ -725,8 +711,8 @@ function EvolutionChart({ data }: { data: EvolutionPoint[] }) {
           top: `${(tooltip.y / 100) * 100}%`,
           left: `${tooltip.x}%`,
           transform: "translate(-50%, -100%)",
-          background: "rgba(10,20,35,0.92)",
-          border: "1px solid rgba(255,255,255,0.1)",
+          background: "#ffffff",
+          border: "1px solid var(--admin-line)",
           borderRadius: 8,
           padding: "6px 12px",
           pointerEvents: "none",
@@ -734,6 +720,8 @@ function EvolutionChart({ data }: { data: EvolutionPoint[] }) {
           whiteSpace: "nowrap",
           zIndex: 10,
           backdropFilter: "blur(8px)",
+          boxShadow: "0 8px 24px rgba(15,23,42,0.15)",
+          color: "var(--admin-ink)",
         }}>
           <div style={{ fontWeight: 700, marginBottom: 4, opacity: 0.6, fontSize: 10, textTransform: "uppercase", letterSpacing: 1 }}>{tooltip.label}</div>
           <div style={{ color: "#19c8dc" }}>📄 Contenus : <strong>{tooltip.contents}</strong></div>
@@ -752,7 +740,7 @@ function DonutChart({ value, max, color }: { value: number; max: number; color: 
   const dash = ratio * circumference;
   return (
     <svg viewBox="0 0 70 70" className="donut-svg">
-      <circle cx="35" cy="35" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="8" />
+      <circle cx="35" cy="35" r={r} fill="none" stroke="var(--admin-line)" strokeWidth="8" />
       <circle
         cx="35" cy="35" r={r} fill="none"
         stroke={color}
@@ -762,7 +750,7 @@ function DonutChart({ value, max, color }: { value: number; max: number; color: 
         transform="rotate(-90 35 35)"
         style={{ transition: 'stroke-dasharray 1s ease' }}
       />
-      <text x="35" y="39" textAnchor="middle" fill="white" fontSize="13" fontWeight="700" fontFamily="Syne, sans-serif">{value}</text>
+      <text x="35" y="39" textAnchor="middle" fill="var(--admin-ink)" fontSize="13" fontWeight="700" fontFamily="Syne, sans-serif">{value}</text>
     </svg>
   );
 }
@@ -796,6 +784,7 @@ function Dashboard({
     ["Réseaux",      counts?.socials ?? 0,       Share2,       "#f472b6"],
     ["Services",     counts?.services ?? 0,      Briefcase,    "#fb923c"],
     ["Certifications", counts?.certifications ?? 0, ShieldCheck, "#facc15"],
+    ["En ligne", counts?.publishedContent ?? 0, Globe2, "#0f9d78"],
     ["Messages",     counts?.messages ?? 0,      Mail,         "#f59e0b"],
     ["Non lus",      counts?.unreadMessages ?? 0, Mail,        "#f87171"],
   ] as const;
@@ -869,9 +858,9 @@ function Dashboard({
                     style={{
                       padding: "3px 10px",
                       borderRadius: 20,
-                      border: period === m ? "1px solid var(--admin-teal)" : "1px solid rgba(255,255,255,0.1)",
-                      background: period === m ? "rgba(25,125,136,0.25)" : "transparent",
-                      color: period === m ? "var(--admin-teal)" : "rgba(255,255,255,0.4)",
+                      border: period === m ? "1px solid var(--admin-blue)" : "1px solid var(--admin-line)",
+                      background: period === m ? "#e0f2fe" : "transparent",
+                      color: period === m ? "var(--admin-blue)" : "var(--admin-muted)",
                       fontSize: 11,
                       fontWeight: 600,
                       cursor: "pointer",
@@ -1795,7 +1784,7 @@ function SingletonEditor({
   title,
   setNotice,
 }: {
-  endpoint: "profile" | "settings" | "ai-settings";
+  endpoint: "profile" | "ai-settings";
   title: string;
   setNotice: (notice: string) => void;
 }) {
@@ -1877,6 +1866,17 @@ function SingletonEditor({
           </div>
         </div>
         <p>Ces données seront disponibles pour le portfolio public.</p>
+
+        {endpoint === "profile" && (
+          <aside className="profile-seo-hint">
+            <strong>Pour améliorer ta visibilité</strong>
+            <span>
+              Ajoute les champs <b>name</b>, <b>jobTitle</b> et <b>bio</b> pour personnaliser le titre et la description du site.
+              <b> location</b> (ex. Lubumbashi, RDC) et <b>serviceArea</b> (tes zones d’intervention) enrichissent les informations locales.
+              Utilise aussi des liens sociaux réels dans Contenus → Réseaux sociaux. Les changements s’appliquent après « Enregistrer ».
+            </span>
+          </aside>
+        )}
 
         {endpoint === "profile" && (
           <div className="cover-field">

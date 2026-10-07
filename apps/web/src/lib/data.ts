@@ -2,10 +2,10 @@
 import seatedPresentationImage from '@assets/optimized/field-transmission.webp';
 import writingPresentationImage from '@assets/optimized/field-method.webp';
 import handshakeImage from '@assets/optimized/field-handshake.webp';
-import diplomaImage from '@assets/optimized/diploma-ceremony.webp';
-import field01PresentationImage from '@assets/optimized/field-01-presentation.webp';
+import diplomaImage from '@assets/optimized/profile-portrait.webp';
+import field01PresentationImage from '@assets/optimized/field-transmission.webp';
 import field02MethodImage from '@assets/optimized/field-02-method.webp';
-import field03HandshakeImage from '@assets/optimized/field-03-handshake.webp';
+import field03HandshakeImage from '@assets/optimized/field-handshake.webp';
 
 export const navItems = [
   { label: 'À propos', href: '/a-propos' },

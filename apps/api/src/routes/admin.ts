@@ -272,6 +272,7 @@ router.get("/dashboard", requireAdmin, async (req: any, res: any, next: any) => 
       socials: items.filter((item) => item.type === "social").length,
       services: items.filter((item) => item.type === "service").length,
       certifications: items.filter((item) => item.type === "certification").length,
+      publishedContent: items.filter((item) => item.published && item.visible).length,
       messages: messages.length,
       unreadMessages: messages.filter((message) => !message.is_read).length,
       evolution,

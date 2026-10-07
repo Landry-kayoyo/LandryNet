@@ -1,9 +1,9 @@
 :root {
-  --admin-ink: #f8fafc;
-  --admin-muted: #94a3b8;
-  --admin-line: #334155;
-  --admin-paper: #090e17;
-  --admin-card: #111827;
+  --admin-ink: #172033;
+  --admin-muted: #64748b;
+  --admin-line: #dbe3ed;
+  --admin-paper: #ffffff;
+  --admin-card: #ffffff;
   --admin-lime: #38bdf8;
   --admin-blue: #818cf8;
   --admin-danger: #f87171;
@@ -18,7 +18,7 @@ body {
 .admin-app { min-height: 100vh; display: flex; overflow-x: hidden; background: var(--admin-paper); color: var(--admin-ink); font-family: var(--font-body); }
 
 /* Sidebar */
-.admin-sidebar { width: 260px; flex: 0 0 260px; display: flex; flex-direction: column; padding: 28px 18px 20px; border-right: 1px solid var(--admin-line); background: #0b111a; color: var(--admin-ink); }
+.admin-sidebar { width: 260px; flex: 0 0 260px; display: flex; flex-direction: column; padding: 28px 18px 20px; border-right: 1px solid var(--admin-line); background: #f8fafc; color: var(--admin-ink); }
 .admin-brand { display: flex; align-items: center; gap: 11px; padding: 0 10px 46px; font-family: 'DM Sans', sans-serif; font-size: .8rem; letter-spacing: .08em; }
 .admin-brand b { color: var(--admin-blue); }
 .admin-brand small { display: block; margin-top: 5px; color: var(--admin-muted); font-size: .53rem; letter-spacing: .16em; }
@@ -35,8 +35,8 @@ body {
 
 /* Main Area */
 .admin-main { min-width: 0; flex: 1; display: flex; flex-direction: column; }
-.admin-header { display: flex; align-items: end; justify-content: space-between; gap: 24px; padding: 38px clamp(22px, 5vw, 72px) 30px; border-bottom: 1px solid var(--admin-line); background: rgba(11, 17, 26, 0.8); backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 10; }
-.admin-header h2 { margin: 8px 0 0; font-family: 'DM Sans', sans-serif; font-size: clamp(1.8rem, 3vw, 2.5rem); letter-spacing: -.03em; font-weight: 700; background: linear-gradient(to right, #fff, var(--admin-muted)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.admin-header { display: flex; align-items: end; justify-content: space-between; gap: 24px; padding: 38px clamp(22px, 5vw, 72px) 30px; border-bottom: 1px solid var(--admin-line); background: rgba(255, 255, 255, 0.94); backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 10; }
+.admin-header h2 { margin: 8px 0 0; font-family: 'DM Sans', sans-serif; font-size: clamp(1.8rem, 3vw, 2.5rem); letter-spacing: -.03em; font-weight: 700; background: linear-gradient(to right, #172033, var(--admin-muted)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 .admin-eyebrow { color: var(--admin-lime); font-family: 'DM Sans', sans-serif; font-size: .63rem; letter-spacing: .13em; text-transform: uppercase; }
 .view-site { color: var(--admin-lime); font-size: .8rem; text-decoration: none; transition: opacity 0.2s; }
 .view-site:hover { opacity: 0.8; }
@@ -102,8 +102,8 @@ body {
 .admin-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; border: 0; padding: 0 20px; background: linear-gradient(135deg, var(--admin-blue), var(--admin-lime)); color: #000; font-weight: 600; cursor: pointer; font: inherit; font-size: .85rem; border-radius: 8px; transition: transform 0.2s ease, box-shadow 0.2s ease; }
 .admin-button:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(56, 189, 248, 0.4); }
 .admin-button:active { transform: translateY(1px); }
-.admin-button-light { background: rgba(255, 255, 255, 0.1); color: var(--admin-ink); }
-.admin-button-light:hover { background: rgba(255, 255, 255, 0.15); box-shadow: none; color: #fff; }
+.admin-button-light { background: #f1f5f9; color: var(--admin-ink); }
+.admin-button-light:hover { background: #e2e8f0; box-shadow: none; color: var(--admin-ink); }
 
 /* Forms & Tables */
 .content-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 18px; margin-bottom: 22px; }
@@ -116,7 +116,7 @@ body {
 .editor-heading { display: flex; justify-content: space-between; align-items: start; }
 .editor-heading h3, .singleton h3 { margin: 7px 0 0; font-family: 'DM Sans', sans-serif; font-size: 1.5rem; letter-spacing: -.03em; }
 .editor-panel label, .login-panel label { display: grid; gap: 8px; color: var(--admin-muted); font-size: .8rem; font-weight: 500; }
-.editor-panel input, .editor-panel textarea, .login-panel input, .singleton textarea, .admin-app input, .admin-app textarea, .admin-app select { width: 100%; box-sizing: border-box; border: 1px solid var(--admin-line); padding: 12px 14px; outline: 0; background: rgba(0,0,0,0.2); color: var(--admin-ink); font: inherit; border-radius: 8px; transition: border-color 0.2s, box-shadow 0.2s; }
+.editor-panel input, .editor-panel textarea, .login-panel input, .singleton textarea, .admin-app input, .admin-app textarea, .admin-app select { width: 100%; box-sizing: border-box; border: 1px solid var(--admin-line); padding: 12px 14px; outline: 0; background: #ffffff; color: var(--admin-ink); font: inherit; border-radius: 8px; transition: border-color 0.2s, box-shadow 0.2s; }
 .editor-panel input:focus, .editor-panel textarea:focus, .login-panel input:focus, .singleton textarea:focus, .admin-app input:focus, .admin-app textarea:focus, .admin-app select:focus { border-color: var(--admin-lime); box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15); }
 .admin-app input::placeholder, .admin-app textarea::placeholder { color: var(--admin-muted); }
 .two-fields { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
@@ -153,9 +153,9 @@ body {
 
 /* Category Combobox */
 .combobox-wrap { position: relative; margin-top: 6px; }
-.combobox-input { width: 100%; box-sizing: border-box; border: 1px solid var(--admin-line); padding: 12px 14px; outline: 0; background: rgba(0,0,0,0.2); color: var(--admin-ink); font: inherit; border-radius: 8px; transition: border-color 0.2s, box-shadow 0.2s; }
+.combobox-input { width: 100%; box-sizing: border-box; border: 1px solid var(--admin-line); padding: 12px 14px; outline: 0; background: #ffffff; color: var(--admin-ink); font: inherit; border-radius: 8px; transition: border-color 0.2s, box-shadow 0.2s; }
 .combobox-input:focus { border-color: var(--admin-lime); box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15); }
-.combobox-list { position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 20; background: #1a2232; border: 1px solid var(--admin-line); border-radius: 10px; padding: 6px; list-style: none; margin: 0; box-shadow: 0 16px 40px rgba(0,0,0,0.5); max-height: 220px; overflow-y: auto; }
+.combobox-list { position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 20; background: #ffffff; border: 1px solid var(--admin-line); border-radius: 10px; padding: 6px; list-style: none; margin: 0; box-shadow: 0 16px 40px rgba(15,23,42,0.15); max-height: 220px; overflow-y: auto; }
 .combobox-option { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-radius: 7px; cursor: pointer; font-size: .88rem; color: var(--admin-muted); transition: background 0.15s, color 0.15s; }
 .combobox-option:hover { background: rgba(255,255,255,0.07); color: var(--admin-ink); }
 .combobox-option.is-selected { background: rgba(56,189,248,0.12); color: var(--admin-lime); font-weight: 600; }
@@ -198,7 +198,7 @@ body {
   padding: 100px 20px 40px;
   overflow-x: hidden;
   box-sizing: border-box;
-  background: radial-gradient(circle at top right, #1e1b4b, #0f172a 40%), #0f172a; 
+  background: radial-gradient(circle at top right, #e0f2fe, #f8fafc 45%), #f8fafc;
   color: var(--admin-ink); 
 }
 .login-mark { position: fixed; top: 36px; left: 36px; display: flex; align-items: center; gap: 10px; color: var(--admin-lime); font-family: 'DM Sans', sans-serif; font-size: .82rem; letter-spacing: .15em; font-weight: bold; z-index: 10; }
@@ -207,11 +207,11 @@ body {
   width: 100%;
   max-width: 460px;
   padding: clamp(28px, 6vw, 48px) clamp(24px, 6vw, 48px);
-  background: rgba(17, 24, 39, 0.75); 
+  background: rgba(255, 255, 255, 0.94);
   backdrop-filter: blur(20px); 
   -webkit-backdrop-filter: blur(20px); 
-  border: 1px solid rgba(255, 255, 255, 0.08); 
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.1); 
+  border: 1px solid var(--admin-line);
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.16);
   border-radius: 20px; 
   position: relative;
   overflow: hidden;
@@ -235,16 +235,16 @@ body {
 .login-panel h1 { max-width: 400px; margin: 12px 0 16px; font-family: 'DM Sans', sans-serif; font-size: clamp(2rem, 5vw, 2.8rem); line-height: 1.1; letter-spacing: -.04em; font-weight: 700; }
 .login-panel p { margin-bottom: 32px; color: var(--admin-muted); line-height: 1.6; font-size: .95rem; }
 .login-panel form { display: grid; gap: 20px; }
-.login-panel input { min-height: 52px; font-size: 1rem; background: rgba(0,0,0,0.3); border-color: rgba(255,255,255,0.1); }
-.login-panel input:focus { background: rgba(0,0,0,0.5); }
+.login-panel input { min-height: 52px; font-size: 1rem; background: #ffffff; border-color: var(--admin-line); }
+.login-panel input:focus { background: #ffffff; }
 .login-panel .admin-button { width: 100%; min-height: 56px; margin-top: 12px; font-size: 1rem; }
 .login-panel small { display: block; margin-top: 24px; color: var(--admin-muted); line-height: 1.5; font-size: .8rem; text-align: center; }
 
 .admin-error { padding: 14px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: var(--admin-danger); font-size: .85rem; border-radius: 8px; text-align: center; }
 
-.multi-combobox .multi-values { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 12px; background: rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; min-height: 48px; align-items: center; }
-.multi-combobox:focus-within .multi-values { border-color: rgba(255,255,255,0.25); background: rgba(0,0,0,0.3); }
-.multi-chip { display: flex; align-items: center; gap: 4px; background: var(--admin-card); border: 1px solid rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 6px; font-size: .85rem; color: var(--admin-ink); }
+.multi-combobox .multi-values { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 12px; background: #ffffff; border: 1px solid var(--admin-line); border-radius: 8px; min-height: 48px; align-items: center; }
+.multi-combobox:focus-within .multi-values { border-color: #94a3b8; background: #ffffff; }
+.multi-chip { display: flex; align-items: center; gap: 4px; background: #f1f5f9; border: 1px solid var(--admin-line); padding: 4px 8px; border-radius: 6px; font-size: .85rem; color: var(--admin-ink); }
 .multi-chip button { background: none; border: none; color: var(--admin-muted); cursor: pointer; padding: 0; display: grid; place-items: center; }
 .multi-chip button:hover { color: var(--admin-danger); }
 .multi-combobox .combobox-input { flex: 1; min-width: 120px; border: none; background: transparent; padding: 0; height: 28px; border-radius: 0; font-size: .9rem; }
@@ -309,7 +309,7 @@ body {
   color: white;
   display: grid;
   place-items: center;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+  box-shadow: 0 4px 14px rgba(15,23,42,0.18);
   cursor: pointer;
   transition: transform 0.2s;
 }
@@ -327,7 +327,7 @@ body {
   margin-bottom: 16px;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+  box-shadow: 0 10px 40px rgba(15,23,42,0.18);
   overflow: hidden;
   animation: noticeSlideIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
@@ -337,7 +337,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(0,0,0,0.2);
+  background: #f8fafc;
 }
 .ai-chat-header h3 {
   margin: 0;
@@ -362,13 +362,13 @@ body {
 .ai-msg.user {
   align-self: flex-end;
   background: rgba(56, 189, 248, 0.15);
-  color: white;
+  color: var(--admin-ink);
   border: 1px solid rgba(56, 189, 248, 0.3);
 }
 .ai-msg.assistant {
   align-self: flex-start;
-  background: rgba(255,255,255,0.05);
-  color: var(--admin-muted);
+  background: #f1f5f9;
+  color: var(--admin-ink);
 }
 .ai-chat-input-area {
   padding: 16px;
@@ -378,9 +378,9 @@ body {
 }
 .ai-chat-input-area input {
   flex: 1;
-  background: rgba(0,0,0,0.3);
+  background: #ffffff;
   border: 1px solid var(--admin-line);
-  color: white;
+  color: var(--admin-ink);
   border-radius: 8px;
   padding: 10px 12px;
   font-family: inherit;
@@ -399,3 +399,35 @@ body {
 .ai-chat-input-area button:hover {
   opacity: 0.8;
 }
+
+.ai-proposal-card {
+  margin-top: 10px;
+  padding: 10px;
+  background: #f8fafc;
+  border: 1px solid var(--admin-line);
+  border-radius: 8px;
+  color: var(--admin-ink);
+}
+
+.admin-app .singleton input,
+.admin-app .singleton select,
+.admin-app .singleton textarea {
+  background: #ffffff !important;
+  color: var(--admin-ink) !important;
+}
+
+.profile-seo-hint {
+  display: grid;
+  gap: 7px;
+  padding: 16px 18px;
+  border: 1px solid #bae6fd;
+  border-left: 4px solid var(--admin-lime);
+  border-radius: 10px;
+  background: #f0f9ff;
+  color: var(--admin-ink);
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+.profile-seo-hint strong { font-family: 'DM Sans', sans-serif; }
+.profile-seo-hint span { color: var(--admin-muted); }
+.profile-seo-hint b { color: var(--admin-blue); }

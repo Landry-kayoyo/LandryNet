@@ -6,6 +6,7 @@ type SeoConfig = {
   description: string;
   path?: string;
   image?: string;
+  keywords?: string;
   noindex?: boolean;
   structuredData?: Record<string, unknown> | Record<string, unknown>[];
 };
@@ -32,6 +33,7 @@ export function useSeoMeta({
   description,
   path = '/',
   image = defaultCover,
+  keywords = seoKeywords,
   noindex = false,
   structuredData,
 }: SeoConfig) {
@@ -42,7 +44,7 @@ export function useSeoMeta({
     const resolvedImage = resolveAbsoluteImageUrl(image);
 
     document.title = fullTitle;
-    setMetaTag('meta[name="keywords"]', { name: 'keywords' }, seoKeywords);
+    setMetaTag('meta[name="keywords"]', { name: 'keywords' }, keywords);
     setMetaTag('meta[name="description"]', { name: 'description' }, description);
     setMetaTag('meta[property="og:title"]', { property: 'og:title' }, fullTitle);
     setMetaTag('meta[property="og:description"]', { property: 'og:description' }, description);
@@ -79,5 +81,5 @@ export function useSeoMeta({
       script.textContent = JSON.stringify(structuredData);
       document.head.appendChild(script);
     }
-  }, [description, image, noindex, path, structuredData, title]);
+  }, [description, image, keywords, noindex, path, structuredData, title]);
 }
