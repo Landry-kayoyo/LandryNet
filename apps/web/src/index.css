@@ -816,7 +816,8 @@
 .portrait-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, transparent 40%, rgba(8, 10, 14, .85));
+  background: linear-gradient(180deg, transparent 40%, rgba(8, 10, 14, .78));
+  z-index: 1;
 }
 
 .portrait-note {
