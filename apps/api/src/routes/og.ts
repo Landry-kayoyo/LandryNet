@@ -5,6 +5,15 @@ const router = Router();
 
 const SITE_URL = process.env.VITE_SITE_URL || "https://landrynet.vercel.app";
 
+function resolvePublicImageUrl(image: unknown): string | null {
+  if (typeof image !== "string" || !image.trim() || image.startsWith("data:")) return null;
+  try {
+    return new URL(image, `${SITE_URL.replace(/\/+$/, "")}/`).toString();
+  } catch {
+    return null;
+  }
+}
+
 // Default OG data per static route
 const STATIC_ROUTES: Record<string, { title: string; description: string; image: string }> = {
   "/": {
@@ -54,10 +63,7 @@ router.get("/og", async (req: any, res: any) => {
       const data = await getPublicCmsData();
       const project = data.projects.find((p: any) => String(p.id) === String(id));
       if (project) {
-        const coverImage =
-          typeof project.data.coverImage === "string" && project.data.coverImage
-            ? project.data.coverImage
-            : `${SITE_URL}/og-cover.jpg`;
+        const coverImage = resolvePublicImageUrl(project.data.coverImage) ?? `${SITE_URL}/og-cover.jpg`;
         return res.json({
           title: `${project.title} | Landry Kayoyo`,
           description:

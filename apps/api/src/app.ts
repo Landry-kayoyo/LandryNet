@@ -20,6 +20,15 @@ const BOT_UA_RE =
 const xmlEscape = (value: string) =>
   value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&apos;");
 
+function resolvePublicImageUrl(image: unknown): string | null {
+  if (typeof image !== "string" || !image.trim() || image.startsWith("data:")) return null;
+  try {
+    return new URL(image, `${SITE_URL.replace(/\/+$/, "")}/`).toString();
+  } catch {
+    return null;
+  }
+}
+
 const STATIC_OG: Record<string, { title: string; description: string; image: string }> = {
   "/": {
     title: "Landry Kayoyo | Administrateur systèmes et réseaux",
@@ -86,10 +95,7 @@ async function resolveOgMeta(path: string): Promise<{ title: string; description
             typeof project.data?.description === "string"
               ? project.data.description
               : "Projet de Landry Kayoyo — infrastructure IT, réseaux et systèmes.",
-          image:
-            typeof project.data?.coverImage === "string" && project.data.coverImage
-              ? project.data.coverImage
-              : `${SITE_URL}/og-cover.jpg`,
+          image: resolvePublicImageUrl(project.data?.coverImage) ?? `${SITE_URL}/og-cover.jpg`,
         };
       }
     } catch (_err) { /* fall through */ }

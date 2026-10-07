@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { ArrowDownRight, ArrowUpRight, Download } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ArrowDownRight, ArrowUpRight, Download, ExternalLink, Share2 } from 'lucide-react';
 import { useRoute } from 'wouter';
 import { SectionKicker } from '@/components/reveal';
 import { useSeoMeta } from '@/hooks/use-seo-meta';
@@ -12,6 +12,7 @@ import profileImage from '@assets/optimized/profile-portrait.webp';
 // PublicationPage
 // ---------------------------------------------------------------------------
 export function PublicationPage() {
+  const [shareFeedback, setShareFeedback] = useState('');
   const [, params] = useRoute('/publication/:id');
   const data = usePublicCmsData();
   const project: PublicCmsItem | null =
@@ -19,11 +20,32 @@ export function PublicationPage() {
   const projectTechnologies = Array.isArray(project?.data.technologies)
     ? project.data.technologies.map(String).join(' · ')
     : String(project?.data.technologies ?? '');
+  const liveUrl = typeof project?.data.liveUrl === 'string' ? project.data.liveUrl.trim() : '';
+
+  const shareProject = async () => {
+    if (!project) return;
+    const url = window.location.href;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: project.title, url });
+        setShareFeedback('Lien partagé.');
+      } else if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+        setShareFeedback('Lien copié.');
+      } else {
+        window.prompt('Copiez le lien du projet :', url);
+      }
+    } catch (error) {
+      if (error instanceof Error && error.name !== 'AbortError') {
+        setShareFeedback('Impossible de partager le lien.');
+      }
+    }
+    window.setTimeout(() => setShareFeedback(''), 2500);
+  };
 
   useSeoMeta({
-    title: params?.id ? `Publication ${params.id}` : 'Publication',
-    description:
-      'Consultez les projets et réalisations de Landry Kayoyo dans les domaines des systèmes, réseaux et infrastructure.',
+    title: project?.title ?? (params?.id ? `Publication ${params.id}` : 'Publication'),
+    description: String(project?.data.description ?? 'Consultez les projets et réalisations de Landry Kayoyo dans les domaines des systèmes, réseaux et infrastructure.'),
     path: params?.id ? `/publication/${params.id}` : '/publication',
     noindex: !data.loading && !project,
     image:
@@ -34,8 +56,19 @@ export function PublicationPage() {
 
   if (!project && data.loading)
     return (
-      <main className="publication-page publication-page-state" aria-live="polite" aria-busy="true">
-        <h1>Chargement du projet…</h1>
+      <main className="publication-page publication-loading-page" aria-live="polite" aria-busy="true">
+        <header className="publication-page-header">
+          <a className="publication-back" href="/projets">
+            <ArrowDownRight size={16} /> Retour aux publications
+          </a>
+          <span className="publication-page-index">PUBLICATION</span>
+        </header>
+        <div className="publication-loading-skeleton" aria-hidden="true">
+          <span />
+          <i />
+          <i />
+          <b />
+        </div>
       </main>
     );
 
@@ -43,7 +76,7 @@ export function PublicationPage() {
     return (
       <main className="publication-page publication-page-state">
         <h1>Publication introuvable</h1>
-        <a className="button button-accent" href="/#publications">
+        <a className="button button-accent" href="/projets">
           Retour aux publications <ArrowUpRight size={16} />
         </a>
       </main>
@@ -52,7 +85,7 @@ export function PublicationPage() {
   return (
     <main className="publication-page">
       <header className="publication-page-header">
-        <a className="publication-back" href="/#publications">
+        <a className="publication-back" href="/projets">
           <ArrowDownRight size={16} /> Retour aux publications
         </a>
         <span className="publication-page-index">
@@ -61,20 +94,35 @@ export function PublicationPage() {
       </header>
 
       <section className="publication-page-hero">
-        <img
-          className={`publication-page-cover${typeof project.data.coverImage === 'string' && project.data.coverImage ? '' : ' is-placeholder-cover'}`}
-          src={
-            typeof project.data.coverImage === 'string' && project.data.coverImage
-              ? project.data.coverImage
-              : defaultCover
-          }
-          alt={`Couverture du projet ${project.title} – Landry Kayoyo, infrastructure IT et réseaux`}
-          fetchPriority="high"
-          decoding="async"
-        />
+        {typeof project.data.coverImage === 'string' && project.data.coverImage ? (
+          <img
+            className="publication-page-cover"
+            src={project.data.coverImage}
+            alt={`Couverture du projet ${project.title} – Landry Kayoyo, infrastructure IT et réseaux`}
+            fetchPriority="high"
+            decoding="async"
+          />
+        ) : (
+          <div className="publication-page-cover-placeholder" role="img" aria-label={`Visuel du projet ${project.title}`}>
+            <span>LANDRY / NET <i /> PUBLICATION</span>
+            <strong>{String(project.data.category ?? 'SYSTÈMES & RÉSEAUX')}</strong>
+            <small>{project.title}</small>
+          </div>
+        )}
         <SectionKicker index="03">Publication détaillée</SectionKicker>
         <h1>{project.title}</h1>
         <p className="publication-page-lead">{String(project.data.description ?? '')}</p>
+        <div className="publication-page-actions">
+          {liveUrl && (
+            <a className="button button-accent" href={liveUrl} target="_blank" rel="noopener noreferrer">
+              Voir le projet en ligne <ExternalLink size={16} />
+            </a>
+          )}
+          <button className="button button-outline publication-share-button" type="button" onClick={() => void shareProject()}>
+            <Share2 size={16} /> Partager le projet
+          </button>
+          {shareFeedback && <span className="publication-share-feedback" role="status">{shareFeedback}</span>}
+        </div>
       </section>
 
       <section className="publication-page-body">
@@ -156,14 +204,14 @@ export function AboutPage() {
   });
 
   useEffect(() => {
-    if (!['#competences', '#technologies'].includes(window.location.hash)) return;
+    if (!['#competences', '#technologies', '#parcours'].includes(window.location.hash)) return;
     const frame = window.requestAnimationFrame(() => {
       document
         .getElementById(window.location.hash.slice(1))
         ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
     return () => window.cancelAnimationFrame(frame);
-  }, []);
+  }, [data.loading]);
 
   const allSkills =
     data.skills.length > 0
@@ -250,6 +298,50 @@ export function AboutPage() {
           </p>
         </div>
       </section>
+
+      {!data.loading && (
+        <section id="parcours" className="about-timeline">
+          <div className="about-timeline-heading">
+            <SectionKicker index="05">Parcours</SectionKicker>
+            <h2>Formation &amp;<br /><em>expériences.</em></h2>
+            <p>Les étapes de mon parcours, avec leur contexte et leurs détails.</p>
+          </div>
+          <div className="about-timeline-list">
+            {data.timeline.length > 0 ? data.timeline
+              .slice()
+              .sort((a, b) => a.sortOrder - b.sortOrder || a.id - b.id)
+              .map((item) => (
+                <article className="about-timeline-entry" key={item.id}>
+                  <div className="path-marker">
+                    <span>{String(item.data.date ?? '') || '—'}</span>
+                    <i />
+                  </div>
+                  <div className="path-copy">
+                    <span className="path-type">{String(item.data.category ?? 'Parcours')}</span>
+                    <h3>{item.title}</h3>
+                    {typeof item.data.institution === 'string' && item.data.institution && <p>{item.data.institution}</p>}
+                    {typeof item.data.description === 'string' && item.data.description && (
+                      <p className="about-timeline-description">{item.data.description}</p>
+                    )}
+                  </div>
+                </article>
+              )) : (
+                <article className="about-timeline-entry">
+                  <div className="path-marker"><span>2026</span><i /></div>
+                  <div className="path-copy">
+                    <span className="path-type">Formation supérieure</span>
+                    <h3>Administration Systèmes &amp; Réseaux</h3>
+                    <p>Université Don Bosco de Lubumbashi</p>
+                    <p className="about-timeline-description">
+                      Projet de fin de cycle : mise en place d’une haute disponibilité des services,
+                      architecture réseau robuste et optimisation de l’infrastructure IT.
+                    </p>
+                  </div>
+                </article>
+              )}
+          </div>
+        </section>
+      )}
 
       {!data.loading && data.certifications.length > 0 && (
         <section className="about-skills">
@@ -377,26 +469,29 @@ export function ServicesPage() {
   );
 
   return (
-    <main className="collection-page about-page">
+    <main className="collection-page about-page services-page">
       <header className="collection-header">
         <a className="publication-back" href="/#about">
           <ArrowDownRight size={16} /> Retour au portfolio
         </a>
         <span>LANDRY NET</span>
       </header>
-      <section className="collection-hero collection-hero-projects">
-        <SectionKicker index="04">Services</SectionKicker>
+      <section className="collection-hero collection-hero-projects services-hero">
+        <SectionKicker index="04">Services IT</SectionKicker>
         <h1>
-          Solutions IT
+          Des solutions concrètes
           <br />
-          <em>pour des infrastructures fiables.</em>
+          <em>pour vos systèmes et réseaux.</em>
         </h1>
         <p>
-          Landry Kayoyo, sous la marque Landry Net, propose des services d&apos;administration
-          système, réseaux, sécurité et monitoring pour des environnements professionnels exigeants.
+          De la conception à l’exploitation, découvrez les services proposés pour créer des
+          infrastructures fiables, sécurisées et adaptées à vos besoins.
         </p>
+        {!data.loading && serviceGroups.length > 0 && (
+          <span className="services-count">{data.services.length} prestations disponibles</span>
+        )}
       </section>
-      <section className="about-skills">
+      <section className="services-list-section" aria-label="Liste des services">
         {data.loading ? (
           <div className="collection-loading">
             <span className="collection-spinner" />
@@ -405,18 +500,22 @@ export function ServicesPage() {
         ) : serviceGroups.length === 0 ? (
           <p className="collection-empty">Aucun service publié pour le moment.</p>
         ) : (
-          <div className="skill-groups">
-            {serviceGroups.map((group) => (
-              <article className="skill-group" key={group.label}>
-                <h3>{group.label}</h3>
+          <div className="services-grid">
+            {serviceGroups.map((group, groupIndex) => (
+              <article className="service-category-card" key={group.label}>
+                <header className="service-category-heading">
+                  <span>{String(groupIndex + 1).padStart(2, '0')}</span>
+                  <span>{group.items.length} {group.items.length === 1 ? 'prestation' : 'prestations'}</span>
+                </header>
+                <h2>{group.label}</h2>
                 <ul>
                   {group.items.map((item) => (
-                    <li key={item.id}>
-                      <strong>{item.title}</strong>
-                      {typeof item.data.description === 'string' && (
+                    <li key={item.id} className="service-offer">
+                      <h3>{item.title}</h3>
+                      {typeof item.data.description === 'string' && item.data.description.trim() && (
                         <p>{item.data.description}</p>
                       )}
-                      {typeof item.data.context === 'string' && item.data.context && (
+                      {typeof item.data.context === 'string' && item.data.context.trim() && (
                         <p className="service-context">{item.data.context}</p>
                       )}
                     </li>
@@ -427,6 +526,17 @@ export function ServicesPage() {
           </div>
         )}
       </section>
+      {!data.loading && serviceGroups.length > 0 && (
+        <section className="services-contact-cta">
+          <div>
+            <span>Un besoin spécifique ?</span>
+            <h2>Parlons de votre infrastructure.</h2>
+          </div>
+          <a className="button button-accent" href="/#contact">
+            Décrire mon besoin <ArrowUpRight size={16} />
+          </a>
+        </section>
+      )}
     </main>
   );
 }
@@ -466,7 +576,11 @@ export function ProjectsPage() {
         </p>
       </section>
       <section className="project-list">
-        {data.projects.length === 0 ? (
+        {data.loading ? (
+          <div className="collection-loading" aria-live="polite" aria-busy="true">
+            <span className="collection-spinner" /> Chargement des projets...
+          </div>
+        ) : data.projects.length === 0 ? (
           <p className="collection-empty">Aucun projet publié pour le moment.</p>
         ) : (
           data.projects.map((project, index) => (
@@ -475,17 +589,18 @@ export function ProjectsPage() {
               href={`/publication/${project.id}`}
               key={project.id}
             >
-              <img
-                src={
-                  typeof project.data.coverImage === 'string' && project.data.coverImage
-                    ? project.data.coverImage
-                    : defaultCover
-                }
-                alt={`Projet ${project.title} de Landry Kayoyo, infrastructure IT, réseaux et systèmes`}
-                loading="lazy"
-                decoding="async"
-              />
-              <span>0{index + 1}</span>
+              {typeof project.data.coverImage === 'string' && project.data.coverImage ? (
+                <div className="project-list-visual">
+                  <img src={project.data.coverImage} alt={`Illustration du projet ${project.title}`} loading="lazy" fetchPriority="low" decoding="async" />
+                </div>
+              ) : (
+                <div className="project-list-visual project-list-visual-placeholder" aria-hidden="true">
+                  <span>LANDRY / NET <i /> PROJET {String(index + 1).padStart(2, '0')}</span>
+                  <strong>SYSTÈMES<br />&amp; RÉSEAUX</strong>
+                  <small>{String(project.data.category ?? 'Étude de cas')}</small>
+                </div>
+              )}
+              <span className="project-list-number">{String(index + 1).padStart(2, '0')}</span>
               <div>
                 <h2>{project.title}</h2>
                 <p>{String(project.data.description ?? '')}</p>

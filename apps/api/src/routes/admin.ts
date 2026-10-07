@@ -210,14 +210,21 @@ router.post("/upload", requireAdmin, upload.single("file"), async (req: any, res
   try {
     const originalPath = resolve(uploadDirectory, req.file.filename);
     const buffer = await sharp(originalPath)
-      .resize({ width: 1800, height: 1800, fit: "inside", withoutEnlargement: true })
+      .resize({ width: 1200, height: 630, fit: "cover", withoutEnlargement: true })
       .webp({ quality: 74, effort: 6 })
       .toBuffer();
 
     unlinkSync(originalPath);
 
-    const base64Url = `data:image/webp;base64,${buffer.toString("base64")}`;
-    res.status(201).json({ url: base64Url });
+    const fileName = (req.file.originalname || "project-cover.webp")
+      .replace(/\.[^.]+$/, ".webp")
+      .replace(/[^a-zA-Z0-9._-]/g, "_")
+      .slice(-120);
+    const imageId = await storePublicDocument(fileName, "image/webp", buffer);
+    const baseUrl = process.env.VERCEL
+      ? process.env.VITE_API_URL || "/api"
+      : `http://localhost:${process.env.PORT || 5000}/api`;
+    res.status(201).json({ url: `${baseUrl.replace(/\/$/, "")}/documents/${imageId}` });
   } catch (error) {
     next(error);
   }

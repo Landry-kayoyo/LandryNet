@@ -109,7 +109,7 @@ async function request(path: string, options: RequestInit = {}) {
 }
 
 function Login({ onLogin }: { onLogin: () => void }) {
-  const [email, setEmail] = useState("admin@localhost");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -1150,7 +1150,7 @@ function ContentManager({
   const uploadCover = async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
-    const response = await fetch(`${API}/admin/upload-document`, {
+    const response = await fetch(`${API}/admin/upload`, {
       method: "POST",
       body: formData,
       credentials: "include",

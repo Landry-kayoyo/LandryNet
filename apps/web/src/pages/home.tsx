@@ -2,12 +2,12 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Activity,
+  Award,
   ArrowDownRight,
   ArrowUp,
   ArrowUpRight,
   CheckCircle2,
   ChevronDown,
-  ChevronRight,
   Cpu,
   ExternalLink,
   Globe2,
@@ -158,12 +158,14 @@ export default function Home() {
   );
 
   useEffect(() => {
-    if (window.location.hash !== '#publications' || publicProjects.length === 0) return;
+    const targetId = window.location.hash.slice(1);
+    if (!['contact', 'publications'].includes(targetId)) return;
+    if (targetId === 'publications' && (cmsData.loading || publicProjects.length === 0)) return;
     const frame = window.requestAnimationFrame(() => {
-      document.getElementById('publications')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [publicProjects.length]);
+  }, [cmsData.loading, publicProjects.length]);
 
   useEffect(() => {
     document.body.style.overflow = menuOpen ? 'hidden' : '';
@@ -351,9 +353,6 @@ export default function Home() {
                 >
                   Voir mon approche <ArrowDownRight size={17} />
                 </a>
-                <a href="#about" className="text-link" data-testid="link-hero-about">
-                  Mon approche <ChevronRight size={16} />
-                </a>
                 {cvUrl && (
                   <a href={cvUrl} className="button button-outline" target="_blank" rel="noreferrer" data-testid="link-hero-cv">
                     Télécharger mon CV <ArrowUpRight size={17} />
@@ -500,25 +499,30 @@ export default function Home() {
                 {publicProjects.map((project, index) => (
                   <Reveal key={project.id} delay={index * 0.06} className="publication-card">
                     <a href={`/publication/${project.id}`}>
-                      <img
-                        className={`publication-cover${typeof project.data.coverImage === 'string' && project.data.coverImage ? '' : ' is-placeholder-cover'}`}
-                        src={
-                          typeof project.data.coverImage === 'string' && project.data.coverImage
-                            ? project.data.coverImage
-                            : defaultCover
-                        }
-                        alt={`Projet ${project.title} de Landry Kayoyo, infrastructure IT, systèmes et réseaux`}
-                        loading="lazy"
-                        decoding="async"
-                      />
-                      <span className="publication-number">0{index + 1}</span>
-                      <span className="publication-title">{project.title}</span>
-                      <span className="publication-summary">
-                        {String(project.data.description ?? 'Publication à découvrir.')}
-                      </span>
-                      <span className="publication-link">
-                        Voir le détail <ArrowUpRight size={16} />
-                      </span>
+                      {typeof project.data.coverImage === 'string' && project.data.coverImage ? (
+                        <div className="publication-card-visual">
+                          <img
+                            className="publication-cover"
+                            src={project.data.coverImage}
+                            alt={`Illustration du projet ${project.title}`}
+                            loading="lazy"
+                            decoding="async"
+                          />
+                          <span className="publication-visual-index">PROJET / {String(index + 1).padStart(2, '0')}</span>
+                        </div>
+                      ) : (
+                        <div className="publication-card-visual publication-cover-placeholder" aria-hidden="true">
+                          <span className="publication-visual-index">LANDRY / NET <i /> PROJET {String(index + 1).padStart(2, '0')}</span>
+                          <span className="publication-visual-word">SYSTÈMES<br />&amp; RÉSEAUX</span>
+                          <span className="publication-visual-category">{String(project.data.category ?? 'Étude de cas')}</span>
+                        </div>
+                      )}
+                      <div className="publication-card-content">
+                        <span className="publication-number">{String(index + 1).padStart(2, '0')} <i /> {String(project.data.category ?? 'PROJET')}</span>
+                        <span className="publication-title">{project.title}</span>
+                        <span className="publication-summary">{String(project.data.description ?? 'Publication à découvrir.')}</span>
+                        <span className="publication-link">Voir le détail <ArrowUpRight size={16} /></span>
+                      </div>
                     </a>
                   </Reveal>
                 ))}
@@ -671,9 +675,18 @@ export default function Home() {
                   </div>
                   <div className="path-copy">
                     <span className="path-type">{String(item.data.category ?? "Parcours")}</span>
-                    <h3>{item.title}</h3>
+                    <h3><a className="path-title-link" href="/a-propos#parcours">{item.title}</a></h3>
                     {typeof item.data.institution === "string" && <p>{item.data.institution}</p>}
-                    {typeof item.data.description === "string" && <small>{item.data.description}</small>}
+                    {typeof item.data.description === "string" && (
+                      <small>
+                        {item.data.description.length > 100
+                          ? `${item.data.description.slice(0, 97).trimEnd()}…`
+                          : item.data.description}
+                      </small>
+                    )}
+                    <a className="path-detail-link" href="/a-propos#parcours">
+                      Voir le parcours complet <ArrowUpRight size={15} />
+                    </a>
                   </div>
                 </Reveal>
               )) : (
@@ -684,22 +697,76 @@ export default function Home() {
                   </div>
                   <div className="path-copy">
                     <span className="path-type">Formation supérieure</span>
-                    <h3>
+                    <h3><a className="path-title-link" href="/a-propos#parcours">
                       Administration
                       <br />
                       Systèmes &amp; Réseaux
-                    </h3>
+                    </a></h3>
                     <p>Université Don Bosco de Lubumbashi</p>
                     <small>
                       Projet de fin de cycle — mise en place d&apos;une haute disponibilité des
                       services, architecture réseau robuste et optimisation de l&apos;infrastructure IT.
                     </small>
+                    <a className="path-detail-link" href="/a-propos#parcours">
+                      Voir le parcours complet <ArrowUpRight size={15} />
+                    </a>
                   </div>
                 </Reveal>
               )}
             </div>
           </div>
         </section>
+
+        {/* ── Certifications ── */}
+        {!cmsData.loading && cmsData.certifications.length > 0 && (
+          <section id="certifications" className="certifications-section section-paper">
+            <div className="shell">
+              <Reveal className="section-heading">
+                <div>
+                  <SectionKicker index="07">Certifications</SectionKicker>
+                  <h2>Des compétences<br /><em>reconnues.</em></h2>
+                </div>
+                <p>Consultez les certifications professionnelles obtenues.</p>
+              </Reveal>
+              <div className="certification-list">
+                {cmsData.certifications.map((certification, index) => {
+                  const certificateUrl = [certification.data.documentUrl, certification.data.url]
+                    .find((value): value is string => typeof value === 'string' && value.trim().length > 0)
+                    ?.trim();
+                  const content = (
+                    <>
+                      <span className="certification-index">{String(index + 1).padStart(2, '0')}</span>
+                      <span className="certification-copy">
+                        <strong>{certification.title}</strong>
+                        {typeof certification.data.issuer === 'string' && certification.data.issuer.trim() && (
+                          <span>{certification.data.issuer}</span>
+                        )}
+                        {typeof certification.data.date === 'string' && certification.data.date.trim() && (
+                          <span>{certification.data.date}</span>
+                        )}
+                      </span>
+                      {certificateUrl ? (
+                        <span className="certification-open">Ouvrir le certificat <ArrowUpRight size={17} /></span>
+                      ) : (
+                        <span className="certification-unavailable"><Award size={17} /> Document indisponible</span>
+                      )}
+                    </>
+                  );
+
+                  return certificateUrl ? (
+                    <Reveal key={certification.id} delay={index * 0.05}>
+                      <a className="certification-card" href={certificateUrl} target="_blank" rel="noreferrer">{content}</a>
+                    </Reveal>
+                  ) : (
+                    <Reveal key={certification.id} delay={index * 0.05}>
+                      <div className="certification-card is-unavailable" aria-label={`${certification.title}, document non disponible`}>{content}</div>
+                    </Reveal>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* ── Contact ── */}
         <section id="contact" className="contact-section">
@@ -868,7 +935,7 @@ export default function Home() {
                 loading="lazy"
                 decoding="async"
               />
-              LANDRY NET
+              <span className="brand-landry">LANDRY</span> NET
             </a>
             <div className="footer-context">
               <span>Architecture IT · Systèmes · Réseaux</span>
