@@ -16,6 +16,7 @@
     "@workspace/api-schema": "workspace:*",
     "@workspace/db": "workspace:*",
     "ai": "^7.0.123",
+    "cloudinary": "^2.5.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "drizzle-orm": "catalog:",

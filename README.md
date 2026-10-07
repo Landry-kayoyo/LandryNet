@@ -75,6 +75,8 @@ Le frontend et l’API peuvent être déployés dans le même projet Vercel. Le 
 
 Dans Vercel, définir au minimum `NODE_ENV=production`, `DB_DRIVER=postgres`, `DATABASE_URL`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` et `VITE_API_URL=/api`. Exécuter ensuite `pnpm run db:migrate:postgres` avec la même `DATABASE_URL` pour créer le schéma Neon.
 
+Pour les médias (images et PDF), ajouter aussi : `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` et `CLOUDINARY_FOLDER`. Sans ces variables, l’upload reste compatible en mode fallback local pour le développement.
+
 SQLite reste réservé au développement local. Une base SQLite sur Vercel ne doit pas être utilisée comme stockage de production: le système de fichiers des fonctions est éphémère et les données peuvent disparaître entre deux exécutions.
 
 ### Contact email

@@ -5,6 +5,7 @@ import { promisify } from "node:util";
 import { Router } from "express";
 import multer from "multer";
 import sharp from "sharp";
+import { v2 as cloudinary } from "cloudinary";
 import {
   createAdminSession,
   createAdminUser,
@@ -29,6 +30,20 @@ const router = Router();
 const SESSION_COOKIE = "landry_admin_session";
 const SESSION_DAYS = 7;
 const uploadDirectory = process.env.VERCEL ? "/tmp/uploads" : resolve(process.cwd(), "uploads");
+const cloudinaryEnabled = Boolean(
+  process.env.CLOUDINARY_CLOUD_NAME &&
+  process.env.CLOUDINARY_API_KEY &&
+  process.env.CLOUDINARY_API_SECRET,
+);
+
+if (cloudinaryEnabled) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+    secure: true,
+  });
+}
 
 // Rate limiter simple en mémoire (anti brute-force)
 const loginAttempts = new Map<string, { count: number; resetAt: number }>();
@@ -107,6 +122,48 @@ async function ensureConfiguredAdminUser() {
 function readSession(req: any) {
   const cookie = req.headers.cookie?.split(";").map((item: string) => item.trim()).find((item: string) => item.startsWith(`${SESSION_COOKIE}=`));
   return cookie?.slice(`${SESSION_COOKIE}=`.length);
+}
+
+function sanitizeFileName(fileName: string, fallback: string) {
+  return (fileName || fallback)
+    .replace(/\.[^.]+$/, "")
+    .replace(/[^a-zA-Z0-9._-]/g, "_")
+    .slice(0, 120)
+    || fallback;
+}
+
+async function uploadToCloudinary(file: Express.Multer.File, folder: string, resourceType: "image" | "raw") {
+  if (!cloudinaryEnabled) return null;
+
+  const buffer = readFileSync(file.path);
+  const publicId = `${Date.now()}-${sanitizeFileName(file.originalname || "upload", "upload")}`;
+
+  const result = await new Promise<{ secure_url: string; public_id: string }>((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder: process.env.CLOUDINARY_FOLDER || folder,
+        resource_type: resourceType,
+        public_id: publicId,
+        overwrite: false,
+        transformation: resourceType === "image" ? [{ quality: "auto", fetch_format: "auto" }] : undefined,
+      },
+      (error, uploaded) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        if (!uploaded) {
+          reject(new Error("Upload Cloudinary impossible."));
+          return;
+        }
+        resolve({ secure_url: uploaded.secure_url, public_id: uploaded.public_id });
+      },
+    );
+
+    stream.end(buffer);
+  });
+
+  return result.secure_url;
 }
 
 async function requireAdmin(req: any, res: any, next: any) {
@@ -209,6 +266,14 @@ router.post("/upload", requireAdmin, upload.single("file"), async (req: any, res
 
   try {
     const originalPath = resolve(uploadDirectory, req.file.filename);
+    const cloudinaryUrl = await uploadToCloudinary(req.file, "landry-net/images", "image").catch(() => null);
+
+    if (cloudinaryUrl) {
+      unlinkSync(originalPath);
+      res.status(201).json({ url: cloudinaryUrl });
+      return;
+    }
+
     const buffer = await sharp(originalPath)
       .resize({ width: 1200, height: 630, fit: "cover", withoutEnlargement: true })
       .webp({ quality: 74, effort: 6 })
@@ -235,8 +300,17 @@ router.post("/upload-document", requireAdmin, pdfUpload.single("file"), async (r
     res.status(400).json({ error: "Un document PDF valide est requis." });
     return;
   }
+
   try {
     const originalPath = resolve(uploadDirectory, req.file.filename);
+    const cloudinaryUrl = await uploadToCloudinary(req.file, "landry-net/documents", "raw").catch(() => null);
+
+    if (cloudinaryUrl) {
+      unlinkSync(originalPath);
+      res.status(201).json({ url: cloudinaryUrl });
+      return;
+    }
+
     const fileName = (req.file.originalname || "document.pdf").replace(/[^a-zA-Z0-9._-]/g, "_").slice(-120);
     const documentId = await storePublicDocument(fileName, "application/pdf", readFileSync(originalPath));
     unlinkSync(originalPath);
